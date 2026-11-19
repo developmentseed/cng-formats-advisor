@@ -11,14 +11,28 @@ function metricValue(metrics: Metric[], name: string): number | undefined {
   return m && m.value !== null ? m.value : undefined;
 }
 
-/** The display latencies: metrics named `display_<label>_latency`. */
-export function displayLatencies(run: ParsedRun): { label: string; value: number }[] {
+const DISPLAY_RE = /^display_(.+)_latency$/;
+
+function displayFrom(metrics: Metric[]): { label: string; value: number }[] {
   const out: { label: string; value: number }[] = [];
-  for (const m of run.metrics) {
-    const match = /^display_(.+)_latency$/.exec(m.name);
+  for (const m of metrics) {
+    const match = DISPLAY_RE.exec(m.name);
     if (match && match[1] && m.value !== null) out.push({ label: match[1], value: m.value });
   }
   return out;
+}
+
+/**
+ * The display latency per scenario: metrics named `display_<label>_latency`.
+ * A roll-up carries them only in the display condition (warm, one worker first).
+ */
+export function displayLatencies(run: ParsedRun): { label: string; value: number }[] {
+  const top = displayFrom(run.metrics);
+  if (top.length) return top;
+  const cond = run.conditions
+    .filter((c) => c.phase === 'display')
+    .sort((a, b) => (a.cache === 'warm' ? 0 : 10) + a.concurrency - ((b.cache === 'warm' ? 0 : 10) + b.concurrency))[0];
+  return cond ? displayFrom(cond.aggregate) : [];
 }
 
 /**
@@ -54,7 +68,10 @@ export interface DerivedRun {
   tierFit: string[];
   highestTier: string | null;
   readLatencyP50?: number;
+  /** Mean over all the display scenarios of this run. */
   displayLatency?: number;
+  /** Display latency per scenario label. */
+  displayByLabel: Record<string, number>;
   writeThroughput?: number;
   compressionRatio?: number;
   codecs: string[];
@@ -63,8 +80,8 @@ export interface DerivedRun {
 export function deriveRun(run: ParsedRun, tiers: Tier[]): DerivedRun {
   const p = run.profile;
   const read = metricValue(run.metrics, 'read_latency_p50') ?? conditionValue(run, 'read', 'read_latency_p50')[0];
-  const disp = displayLatencies(run).map((d) => d.value);
-  const display = mean(disp.length ? disp : conditionValue(run, 'display', /^display_.+_latency$/));
+  const scenarios = displayLatencies(run);
+  const display = mean(scenarios.map((d) => d.value));
   const total = p?.totalBytes ?? metricValue(run.metrics, 'total_bytes');
   const count = p?.count ?? metricValue(run.metrics, 'object_count');
   return {
@@ -75,6 +92,7 @@ export function deriveRun(run: ParsedRun, tiers: Tier[]): DerivedRun {
     highestTier: p ? highestTier(p.mean, tiers) : null,
     ...(read !== undefined ? { readLatencyP50: read } : {}),
     ...(display !== undefined ? { displayLatency: display } : {}),
+    displayByLabel: Object.fromEntries(scenarios.map((d) => [d.label, d.value])),
     ...(metricValue(run.metrics, 'write_throughput') !== undefined
       ? { writeThroughput: metricValue(run.metrics, 'write_throughput') }
       : {}),
@@ -113,11 +131,24 @@ export function selectedMeasurements(
   tiers: Tier[],
 ): Partial<Record<FormatId, CandidateMeasurements>> {
   const out: Partial<Record<FormatId, CandidateMeasurements>> = {};
+  const derived: Partial<Record<FormatId, DerivedRun>> = {};
   const arms = armsByFormat(runs);
   for (const [fmt, list] of Object.entries(arms) as [AnyFormatId, ParsedRun[]][]) {
     if (fmt === 'virtual-zarr' || !list.length) continue;
     const chosen = list.find((r) => r.id === selection[fmt]) ?? list[0]!;
-    out[fmt] = toMeasurements(deriveRun(chosen, tiers));
+    derived[fmt] = deriveRun(chosen, tiers);
+    out[fmt] = toMeasurements(derived[fmt]!);
+  }
+  // Display: compare like for like, on the scenarios that every measured arm shares.
+  const withDisplay = (Object.keys(derived) as FormatId[]).filter((f) => Object.keys(derived[f]!.displayByLabel).length);
+  if (withDisplay.length >= 2) {
+    const common = Object.keys(derived[withDisplay[0]!]!.displayByLabel).filter((label) =>
+      withDisplay.every((f) => label in derived[f]!.displayByLabel),
+    );
+    for (const f of withDisplay) {
+      const vals = common.map((label) => derived[f]!.displayByLabel[label]!);
+      out[f] = { ...out[f], displayLatency: mean(vals), displayScenarios: common.length };
+    }
   }
   return out;
 }

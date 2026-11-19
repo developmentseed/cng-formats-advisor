@@ -1,0 +1,45 @@
+{
+  "source": "CNES study testbed (Scaleway), produced with cng-formats-benchmark",
+  "cases": {
+    "case1": [
+      {
+        "path": "sentinel2-l2a-maja/sentinel2-l2a-cog/20260629T212757Z/rollup/result.json",
+        "label": "COG, Deflate"
+      },
+      {
+        "path": "sentinel2-l2a-maja/sentinel2-l2a-geozarr/20260814T121300Z/rollup/result.json",
+        "label": "GeoZarr, with pyramid"
+      },
+      {
+        "path": "sentinel2-l2a-maja/sentinel2-l2a-zarr/20260814T101008Z/rollup/result.json",
+        "label": "Zarr, no pyramid"
+      }
+    ],
+    "case2": [
+      {
+        "path": "sentinel1-rtc/sentinel1-cog/20260629T212757Z/rollup/result.json",
+        "label": "COG, Deflate"
+      },
+      {
+        "path": "sentinel1-rtc/sentinel1-geozarr/20260814T101008Z/rollup/result.json",
+        "label": "GeoZarr, with pyramid"
+      },
+      {
+        "path": "sentinel1-rtc/sentinel1-zarr/20260814T101008Z/rollup/result.json",
+        "label": "Zarr, no pyramid"
+      }
+    ],
+    "case3": [
+      {
+        "path": "swot-pixc/swot-pixc-copc/20260903T133550Z/rollup/result.json",
+        "label": "COPC, 6 granules"
+      }
+    ],
+    "case4": [
+      {
+        "path": "swot-lakesp-prior/swot-lakesp-geoparquet/20260623T201623Z/rollup/result.json",
+        "label": "GeoParquet, 2 passes"
+      }
+    ]
+  }
+}

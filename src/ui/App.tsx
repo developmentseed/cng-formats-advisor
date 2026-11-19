@@ -88,6 +88,8 @@ export function App() {
   );
   const [theme, setTheme] = useState<Theme>(readTheme);
   const [runs, setRuns] = useState<ParsedRun[]>([]);
+  // The runs behind the case study that is open (public/runs). Not in the share link.
+  const [studyRuns, setStudyRuns] = useState<ParsedRun[]>([]);
   const [errors, setErrors] = useState<UploadError[]>([]);
   const [selection, setSelection] = useState<Partial<Record<AnyFormatId, string>>>({});
   const [status, setStatus] = useState('');
@@ -155,9 +157,10 @@ export function App() {
   }, [view]);
 
   const control = useMemo(() => decideControl(state.answers), [state.answers]);
+  const allRuns = useMemo(() => [...studyRuns, ...runs], [studyRuns, runs]);
   const measures = useMemo(
-    () => selectedMeasurements(runs, selection, state.tierPolicy.tiers),
-    [runs, selection, state.tierPolicy.tiers],
+    () => selectedMeasurements(allRuns, selection, state.tierPolicy.tiers),
+    [allRuns, selection, state.tierPolicy.tiers],
   );
   const ranking = useMemo(
     () => (control.continuesToStage2 ? rank(state, measures) : null),
@@ -166,6 +169,30 @@ export function App() {
   const statuses = useMemo(() => stepStatuses(state, control, ranking), [state, control, ranking]);
   const preset = state.preset ? getCase(state.preset) : undefined;
   const modified = !!state.preset && stateToHash(presetState(state.preset)) !== hash;
+
+  // Load the runs of the open case study.
+  const runsFile = state.preset ? getCase(state.preset)?.runsFile : undefined;
+  useEffect(() => {
+    setStudyRuns([]);
+    setSelection({});
+    if (!runsFile) return;
+    let cancelled = false;
+    fetch(`${import.meta.env.BASE_URL}${runsFile}`)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((text) => {
+        if (cancelled) return;
+        const parsed = parseBenchmarkText(text, runsFile)
+          .filter((r): r is { ok: true; run: ParsedRun } => r.ok)
+          .map(({ run }) => ({ ...run, id: `study-${run.id}`, origin: 'study' as const }));
+        setStudyRuns(parsed);
+      })
+      .catch(() => {
+        /* The case still works with the numbers of the guide. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [runsFile]);
 
   // Analytics: one "Decision Reached" per distinct decision, after the inputs settle.
   const sent = useRef(new Set<string>());
@@ -438,8 +465,20 @@ export function App() {
         <div className="strip">
           {control.continuesToStage2 && (
             <button type="button" className="strip-card" onClick={openMeasurements}>
-              <b>{ranking?.close ? 'Close call? Measure them' : 'Measure your own data'}</b>
-              <span>Run cng-formats-benchmark, then upload the results here.</span>
+              {studyRuns.length > 0 ? (
+                <>
+                  <b>See the measured runs</b>
+                  <span>
+                    {studyRuns.length} run{studyRuns.length > 1 ? 's' : ''} from the study: sizes, tiers, read and display
+                    times.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <b>{ranking?.close ? 'Close call? Measure them' : 'Measure your own data'}</b>
+                  <span>Run cng-formats-benchmark, then upload the results here.</span>
+                </>
+              )}
             </button>
           )}
           {preset && <PresetOutcome preset={preset} modified={modified} />}
@@ -459,7 +498,7 @@ export function App() {
           <details className="section" id="measurements">
             <summary>Measurements</summary>
             <BenchmarkPanel
-              runs={runs}
+              runs={allRuns}
               errors={errors}
               selection={selection}
               tiers={state.tierPolicy.tiers}
@@ -469,9 +508,8 @@ export function App() {
               onClear={() => {
                 setRuns([]);
                 setErrors([]);
-                setSelection({});
               }}
-              weights={<MeasuredWeights state={state} hasBenchmark={runs.length > 0} onChange={setState} />}
+              weights={<MeasuredWeights state={state} hasBenchmark={allRuns.length > 0} onChange={setState} />}
             />
           </details>
         )}

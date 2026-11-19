@@ -44,6 +44,11 @@ export interface CasePreset {
   tierPolicy: TierPolicyKind;
   /** Published measurements. Empty when the guide gives none. */
   measurements: PublishedArm[];
+  /**
+   * The benchmark runs behind the measurements, bundled with the app
+   * (public/runs, from scripts/extract-runs.mjs). Path relative to the base URL.
+   */
+  runsFile?: string;
   /** "Where it lands", as the guide writes it. */
   outcome: string;
   /** Display name for the case tile and the banner. */
@@ -89,6 +94,7 @@ export const CASES: CasePreset[] = [
     ref: REF.case1,
     answers: REPROCESS,
     tierPolicy: 'cnes',
+    runsFile: 'runs/case1.json',
     measurements: [
       {
         label: 'COG (ZSTD)',
@@ -150,6 +156,7 @@ export const CASES: CasePreset[] = [
     ref: REF.case2,
     answers: REPROCESS,
     tierPolicy: 'cnes',
+    runsFile: 'runs/case2.json',
     measurements: [
       {
         label: 'COG (ZSTD)',
@@ -214,6 +221,7 @@ export const CASES: CasePreset[] = [
     ref: REF.case3,
     answers: REPROCESS,
     tierPolicy: 'cnes',
+    runsFile: 'runs/case3.json',
     measurements: [
       {
         label: 'COPC',
@@ -257,6 +265,7 @@ export const CASES: CasePreset[] = [
     ref: REF.case4,
     answers: REPROCESS,
     tierPolicy: 'cnes',
+    runsFile: 'runs/case4.json',
     measurements: [
       {
         label: 'GeoParquet',

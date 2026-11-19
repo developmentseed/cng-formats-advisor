@@ -110,6 +110,27 @@ describe('benchmark parser', () => {
     expect(new Set(list.map((r) => r.id)).size).toBe(3);
   });
 
+  it('display is compared like for like: the mean of the scenarios that every format shares', () => {
+    const run = (format: string, display: Record<string, number>) =>
+      JSON.stringify({
+        timestamp: 't', dataset_id: 'd', format_id: format,
+        metrics: Object.entries(display).map(([label, value]) => ({ name: `display_${label}_latency`, value, unit: 's' })),
+      });
+    const [a] = parseBenchmarkText(run('cog', { z8: 0.2, z12: 0.4 }), 'a.json');
+    const [b] = parseBenchmarkText(run('geozarr', { z8: 0.1, z12: 0.3, z4: 5 }), 'b.json');
+    if (!a?.ok || !b?.ok) throw new Error('parse');
+    const m = selectedMeasurements(mergeRuns([], [a.run, b.run], 1), {}, CNES_TIERS);
+    // z4 exists only for GeoZarr: it is left out of both means.
+    expect(m.cog!.displayLatency).toBeCloseTo(0.3);
+    expect(m.geozarr!.displayLatency).toBeCloseTo(0.2);
+    expect(m.geozarr!.displayScenarios).toBe(2);
+  });
+
+  it('a roll-up gives its display scenarios from the display condition', () => {
+    const d = deriveRun(ok('rollup.json'), CNES_TIERS);
+    expect(Object.keys(d.displayByLabel).sort()).toEqual(['z12', 'z8']);
+  });
+
   it('the compression ratio is weighted by size, not a plain mean of per-object ratios', () => {
     const [r] = parseBenchmarkText(
       JSON.stringify({

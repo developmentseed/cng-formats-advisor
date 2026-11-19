@@ -74,6 +74,10 @@ export interface ParsedRun {
   conditions: ConditionSummary[];
   flags: RunFlags;
   armLabel: string;
+  /** Where the run comes from, when the file says it (params.source). */
+  source?: string;
+  /** 'study': bundled with a case study. 'upload': a file of the user. */
+  origin: 'study' | 'upload';
 }
 
 export type ParseResult =
@@ -194,7 +198,10 @@ function parseOne(v: unknown, fileName: string, index: number, total: number): P
   };
   const scope = typeof params.scope === 'string' ? params.scope : undefined;
   const candidate = formatFromBenchmarkId(formatId);
-  const armLabel = buildArmLabel({ formatId, codecs, params, scope, timestamp, fileName, index, total });
+  const armLabel =
+    typeof params.arm_label === 'string' && params.arm_label.trim()
+      ? params.arm_label.trim()
+      : buildArmLabel({ formatId, codecs, params, scope, timestamp, fileName, index, total });
 
   return {
     id: `${fileName}#${index}`,
@@ -212,6 +219,8 @@ function parseOne(v: unknown, fileName: string, index: number, total: number): P
     conditions: parseConditions(o.conditions),
     flags,
     armLabel,
+    ...(typeof params.source === 'string' ? { source: params.source } : {}),
+    origin: 'upload',
   };
 }
 

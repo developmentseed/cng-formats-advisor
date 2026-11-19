@@ -242,7 +242,9 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
       let explanation = 'No benchmark data for this format. Left out of the mean.';
       if (isNum(v) && isNum(b) && v > 0) {
         value = spec.lowerIsBetter ? b / v : v / b;
-        explanation = `${spec.unitText(v)}; best ${spec.unitText(b)}.`;
+        explanation = `${spec.unitText(v)}; best ${spec.unitText(b)}.${
+          c === 'display' && m.displayScenarios ? ` Mean of the ${m.displayScenarios} scenarios that every measured format shares.` : ''
+        }`;
       } else {
         warnings.push({ kind: 'no-data', text: `${BENCHMARK_LABEL[c]}: no benchmark data.`, ref: REF.quantitative });
       }

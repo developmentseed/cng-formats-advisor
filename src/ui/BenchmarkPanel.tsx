@@ -106,8 +106,8 @@ export function BenchmarkPanel({
       </p>
 
       {preset && preset.measurements.length > 0 && (
-        <details open>
-          <summary>Published measurements: {preset.title}</summary>
+        <details>
+          <summary>Numbers in the guide: {preset.title}</summary>
           <p className="small muted">
             Copied from the guide. The tier column applies your current tier policy to the published mean object size.
           </p>
@@ -194,10 +194,12 @@ export function BenchmarkPanel({
       {runs.length > 0 && (
         <>
           <div className="field-row" style={{ marginTop: 12 }}>
-            <h3 style={{ margin: 0 }}>Uploaded runs ({runs.length})</h3>
-            <button type="button" className="btn" onClick={onClear}>
-              Remove all
-            </button>
+            <h3 style={{ margin: 0 }}>Runs ({runs.length})</h3>
+            {runs.some((r) => r.origin === 'upload') && (
+              <button type="button" className="btn" onClick={onClear}>
+                Remove my uploads
+              </button>
+            )}
           </div>
           <WarningList items={setWarnings(runs).map((t) => ({ text: t }))} />
           {weights && <div className="callout" style={{ marginTop: 8 }}>{weights}</div>}
@@ -243,7 +245,15 @@ export function BenchmarkPanel({
               <tbody>
                 {derived.map(({ run, d }) => (
                   <tr key={run.id}>
-                    <td>{run.armLabel}</td>
+                    <td>
+                      {run.armLabel}
+                      {run.origin === 'study' && (
+                        <>
+                          {' '}
+                          <span className="badge">From the study</span>
+                        </>
+                      )}
+                    </td>
                     <td>{run.datasetId}</td>
                     <td className="num">{d.objectCount?.toLocaleString('en-US') ?? '—'}</td>
                     <td className="num">{d.totalBytes !== undefined ? formatBytes(d.totalBytes) : '—'}</td>
@@ -290,6 +300,7 @@ export function BenchmarkPanel({
                   Format: {run.formatId} · codec: {run.codecs.join(', ') || '—'} · layouts: {run.layoutKinds.join(', ') || '—'} ·{' '}
                   {run.timestamp}
                 </p>
+                {run.source && <p className="small muted">Source: {run.source}.</p>}
                 <Histogram run={run} />
                 {disp.length > 0 && (
                   <>

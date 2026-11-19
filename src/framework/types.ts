@@ -124,6 +124,8 @@ export interface CandidateMeasurements {
   totalBytes?: number;
   readLatencyP50?: number;
   displayLatency?: number;
+  /** Number of display scenarios behind displayLatency, when they are shared by the compared formats. */
+  displayScenarios?: number;
   writeThroughput?: number;
 }
 

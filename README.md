@@ -65,6 +65,21 @@ of `result.json` files:
 CNG_RUNS_DIR=../cnes-cng-study/deliverables/D3-benchmarks/testbed/runs npm test
 ```
 
+## Case-study runs
+
+Cases 1 to 4 load the benchmark runs behind their numbers from `public/runs/`.
+These files are compact extracts of the `cng-formats-benchmark` roll-ups of the
+CNES study: object-size profile and histogram, metrics, cold and warm read and
+display results, codecs and compression ratio. Product ids, per-object layouts
+and raw timings are not kept. A test checks them against the numbers of the
+guide.
+
+To regenerate them (the run list is in `scripts/runs-manifest.json`):
+
+```sh
+node scripts/extract-runs.mjs ../cnes-cng-study/deliverables/D3-benchmarks/testbed/runs/scaleway
+```
+
 ## Development
 
 Requires Node.js 22.12 or later.
