@@ -101,7 +101,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: Dis
             value={state.tierPolicy.kind}
             options={[
               { value: 'none', label: 'None' },
-              { value: 'cnes', label: 'CNES example' },
+              { value: 'cnes', label: 'Warm and cold tiers' },
               { value: 'custom', label: 'Custom' },
             ]}
             onChange={(v) => onChange((s) => withTierPolicy(s, v))}
@@ -109,7 +109,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: Dis
         </div>
         {state.tierPolicy.kind === 'cnes' && (
           <span className="small muted">
-            CNES Datalake example: {CNES_TIERS.map((t) => `${t.name} ≥ ${t.minObjectBytes / MiB} MiB`).join(', ')} mean
+            Example from the guide (CNES Datalake): {CNES_TIERS.map((t) => `${t.name} ≥ ${t.minObjectBytes / MiB} MiB`).join(', ')} mean
             object size. Advisory floors, not a general rule.
           </span>
         )}
