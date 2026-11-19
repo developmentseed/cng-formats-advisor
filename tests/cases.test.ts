@@ -61,6 +61,17 @@ describe('guide case studies', () => {
     expect(ranking).toBeNull();
   });
 
+  it('Sentinel-2 time-series cube (not in the guide): GeoZarr first, with a clear margin', () => {
+    const { control, order, ranking } = run('s2-time-cube');
+    expect(control.kind).toBe('free');
+    expect(order[0]).toBe('geozarr');
+    expect(ranking!.close).toBe(false);
+    // Still first with the stricter maturity limit L3: the result does not hang on one value.
+    const strict = rank({ ...presetState('s2-time-cube'), minMaturity: 3 })!;
+    expect(strict.candidates[0]!.format).toBe('geozarr');
+    expect(strict.close).toBe(false);
+  });
+
   it('each guide case matches its expectedTop data', () => {
     for (const c of CASES.filter((x) => x.inGuide && x.expectedTop.length)) {
       const { order } = run(c.id);
@@ -70,6 +81,7 @@ describe('guide case studies', () => {
 
   it('the presets that are not in the guide carry the label', () => {
     expect(getCase('s2-l2b-snow')!.inGuide).toBe(false);
+    expect(getCase('s2-time-cube')!.inGuide).toBe(false);
     expect(getCase('new-product')!.inGuide).toBe(false);
     expect(CASES.filter((c) => c.inGuide)).toHaveLength(6);
   });

@@ -205,7 +205,16 @@ export const DEFAULT_INPUTS: PresetInputs = {
   encodingImportance: c('medium', 'Default importance.', REF.encoding),
 };
 
-export type CasePresetId = 'case1' | 'case2' | 'case3' | 'case4' | 'case5' | 'case6' | 's2-l2b-snow' | 'new-product';
+export type CasePresetId =
+  | 'case1'
+  | 'case2'
+  | 'case3'
+  | 'case4'
+  | 'case5'
+  | 'case6'
+  | 's2-time-cube'
+  | 's2-l2b-snow'
+  | 'new-product';
 
 export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   case1: {
@@ -255,6 +264,14 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
     processingMode: c('on-the-fly', 'Not used: no Stage 2.', REF.case6),
     minMaturity: c(3, 'Not used: no Stage 2.', REF.case6),
     encodingImportance: c('medium', 'Not used: no Stage 2.', REF.case6),
+  },
+  's2-time-cube': {
+    topology: c('nd-cube', 'NOT IN THE GUIDE as a case. Case 2: "a year of RTC over a region is naturally a time × y × x × pol cube"; case 1: "many scenes are concatenated along time into a single cube".', REF.case2),
+    familyFocus: c('across', 'Case 1: "For temporal analysis GeoZarr is the right target"; case 2: "on a Zarr cube a time-series slice or an area-of-interest subset is one range-addressable query".', REF.case1),
+    intentWeights: c(W(0, 3, 1, 1, 0), 'NOT IN THE GUIDE. Assumption: time-series analysis leads ("the analysis path" of case 2); some visualization and distribution.', REF.case2),
+    processingMode: c('batched', 'NOT IN THE GUIDE. Assumption: time-series analysis over a region is a bulk scan.', REF.intent),
+    minMaturity: c(2, '"An L2 candidate can still be the right answer. Multidimensional cubes have no mature format candidate." The producer accepts to "plan for change".', REF.maturityWarning),
+    encodingImportance: c('high', 'Case 1: "The source reflectance is stored as scaled integers, and the nodata fill is left undeclared."', REF.case1),
   },
   's2-l2b-snow': {
     topology: c('raster-2d', 'NOT IN THE GUIDE. Assumption: a per-tile 2D raster product.', REF.topology),

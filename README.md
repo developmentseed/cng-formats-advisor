@@ -24,8 +24,9 @@ with a live short list beside the questions:
 The dashboard helps. You make the final call. No format is removed by one answer.
 
 Presets load the six [case studies](https://guide.cloudnativegeo.org/decision-framework/case-studies.html)
-of the guide, with their published measurements. Two more presets are not in the
-guide and are labelled so.
+of the guide, with their published measurements. Three more presets are not in
+the guide and are labelled so. One of them, the Sentinel-2 L2A time-series cube,
+is the use case where the guide text points to GeoZarr.
 
 You can upload `result.json` files from
 [cng-formats-benchmark](https://github.com/developmentseed/cng-formats-benchmark)

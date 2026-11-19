@@ -338,7 +338,7 @@ export function App() {
   const presetBanner = preset && (
     <div className="preset-banner small">
       <span>
-        Case study loaded: <strong>{preset.title}</strong> ({preset.product}).{' '}
+        {preset.inGuide ? 'Case study loaded' : 'Example loaded'}: <strong>{preset.title}</strong> ({preset.product}).{' '}
         {!preset.inGuide && <span className="badge">Not in the guide</span>}
         {modified && ' You changed some inputs.'}
       </span>

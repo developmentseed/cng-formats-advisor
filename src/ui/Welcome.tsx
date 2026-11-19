@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CASES } from '../framework/data/cases';
+import { FORMATS } from '../framework/data/formats';
 import { FRAMEWORK_URL, GUIDE_BASE } from '../framework/data/guide';
 import type { CasePresetId } from '../framework/data/judgements';
 import { STEPS, STEP_TITLE } from '../framework/steps';
@@ -69,7 +70,12 @@ export function Welcome({
               <span className="title">{c.title}</span>
               <span className="sub">{c.product}</span>
               <span className="sub">
-                <strong>Lands on:</strong> {c.inGuide ? c.outcome.split('.')[0] : 'no published outcome'}
+                <strong>Lands on:</strong>{' '}
+                {c.inGuide
+                  ? c.outcome.split('.')[0]
+                  : c.expectedTop[0]
+                    ? `${FORMATS[c.expectedTop[0]].name}, from the guide text`
+                    : 'no published outcome'}
               </span>
               {!c.inGuide && <span className="badge">Not in the guide</span>}
             </button>

@@ -339,6 +339,26 @@ export const CASES: CasePreset[] = [
     expectedTop: [],
   },
   {
+    id: 's2-time-cube',
+    title: 'Sentinel-2 L2A time-series cube',
+    product: 'Sentinel-2 L2A scenes stacked over time, for time-series analysis',
+    sourceFormat: 'geoTiff in a .zip',
+    inGuide: false,
+    ref: REF.case1,
+    answers: REPROCESS,
+    tierPolicy: 'cnes',
+    measurements: [],
+    outcome:
+      'Not a case of the guide. The guide text points to GeoZarr for this use: "For temporal analysis GeoZarr is the right target" (case 1), "GeoZarr for the analysis path, once the cube is built and measured" (case 2).',
+    cautions: [
+      'The cube itself is not measured. Every GeoZarr figure in the guide describes a per-scene, two-dimensional store.',
+      'The temporal benefit appears only once many scenes are concatenated along time into a single cube. It is a collection-level layout decision.',
+      'GeoZarr is L2: plan for change. Budget for convention churn, and pin the versions you depend on.',
+      'This preset is not a case study of the guide. Its intent mix is an assumption. Review it for your product.',
+    ],
+    expectedTop: ['geozarr'],
+  },
+  {
     id: 's2-l2b-snow',
     title: 'Sentinel-2 L2B snow',
     product: 'Sentinel-2 L2B snow cover',
