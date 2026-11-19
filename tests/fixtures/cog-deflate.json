@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-06-17T10:00:00Z",
+  "tool_versions": {
+    "cng_benchmark": "0.0.0-synthetic"
+  },
+  "dataset_id": "synthetic-raster",
+  "format_id": "cog",
+  "params": {
+    "block_size": 512,
+    "scope": "product",
+    "note": "SYNTHETIC TEST FIXTURE, NOT A MEASUREMENT"
+  },
+  "artifacts": [],
+  "conditions": [],
+  "object_profile": {
+    "count": 10,
+    "total_bytes": 429916160,
+    "mean": 42991616,
+    "median": 42991616,
+    "p50": 42991616,
+    "p90": 51589939.199999996,
+    "p95": 55889100.800000004,
+    "p99": 60188262.4,
+    "min_bytes": 21495808,
+    "max_bytes": 64487424,
+    "histogram": [
+      {
+        "lower": 21495808,
+        "upper": 42991616,
+        "count": 5
+      },
+      {
+        "lower": 42991616,
+        "upper": 85983232,
+        "count": 5
+      }
+    ],
+    "tier_fit": [
+      "warm"
+    ],
+    "highest_tier": "warm"
+  },
+  "object_layouts": [
+    {
+      "kind": "cog",
+      "name": "B04",
+      "size_bytes": 42991616,
+      "is_tiled": true,
+      "block_height": 512,
+      "block_width": 512,
+      "overview_decimations": [
+        2,
+        4,
+        8
+      ],
+      "internal_tiles": 484,
+      "codec": "deflate",
+      "compression_ratio": 2,
+      "band_names": []
+    }
+  ],
+  "metrics": [
+    {
+      "name": "write_elapsed",
+      "value": 25,
+      "unit": "s"
+    },
+    {
+      "name": "write_throughput",
+      "value": 16777216,
+      "unit": "bytes/s"
+    },
+    {
+      "name": "read_latency_p50",
+      "value": 0.13,
+      "unit": "s"
+    },
+    {
+      "name": "display_z8_latency",
+      "value": 0.32,
+      "unit": "s",
+      "detail": {
+        "tile": "8/1/1",
+        "chunks": 4,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_z12_latency",
+      "value": 0.21,
+      "unit": "s",
+      "detail": {
+        "tile": "12/1/1",
+        "chunks": 1,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_scenarios",
+      "value": 2,
+      "detail": {
+        "scenarios": []
+      }
+    }
+  ]
+}

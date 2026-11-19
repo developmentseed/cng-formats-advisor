@@ -1,0 +1,127 @@
+{
+  "timestamp": "2026-06-17T10:00:00Z",
+  "tool_versions": {
+    "cng_benchmark": "0.0.0-synthetic"
+  },
+  "dataset_id": "synthetic-raster",
+  "format_id": "cog",
+  "params": {
+    "block_size": 512,
+    "scope": "product",
+    "note": "SYNTHETIC TEST FIXTURE, NOT A MEASUREMENT"
+  },
+  "artifacts": [],
+  "conditions": [],
+  "object_profile": {
+    "count": 10,
+    "total_bytes": 419430400,
+    "mean": 41943040,
+    "median": 41943040,
+    "p50": 41943040,
+    "p90": 50331648,
+    "p95": 54525952,
+    "p99": 58720256,
+    "min_bytes": 20971520,
+    "max_bytes": 62914560,
+    "histogram": [
+      {
+        "lower": 20971520,
+        "upper": 41943040,
+        "count": 5
+      },
+      {
+        "lower": 41943040,
+        "upper": 83886080,
+        "count": 5
+      }
+    ],
+    "tier_fit": [
+      "warm"
+    ],
+    "highest_tier": "warm"
+  },
+  "object_layouts": [
+    {
+      "kind": "cog",
+      "name": "B04",
+      "size_bytes": 41943040,
+      "is_tiled": true,
+      "block_height": 512,
+      "block_width": 512,
+      "overview_decimations": [
+        2,
+        4,
+        8
+      ],
+      "internal_tiles": 484,
+      "codec": "zstd",
+      "compression_ratio": 2.1,
+      "band_names": []
+    }
+  ],
+  "metrics": [
+    {
+      "name": "write_elapsed",
+      "value": 20,
+      "unit": "s"
+    },
+    {
+      "name": "write_throughput",
+      "value": 20971520,
+      "unit": "bytes/s"
+    },
+    {
+      "name": "read_window_count",
+      "value": 8
+    },
+    {
+      "name": "read_latency_mean",
+      "value": 0.14,
+      "unit": "s"
+    },
+    {
+      "name": "read_latency_p50",
+      "value": 0.12,
+      "unit": "s"
+    },
+    {
+      "name": "read_latency_spread",
+      "value": 0.05,
+      "unit": "s"
+    },
+    {
+      "name": "read_decoded_throughput",
+      "value": 52428800,
+      "unit": "decoded-bytes/s"
+    },
+    {
+      "name": "display_z8_latency",
+      "value": 0.3,
+      "unit": "s",
+      "detail": {
+        "tile": "8/1/1",
+        "chunks": 4,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_z12_latency",
+      "value": 0.2,
+      "unit": "s",
+      "detail": {
+        "tile": "12/1/1",
+        "chunks": 1,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_scenarios",
+      "value": 2,
+      "detail": {
+        "scenarios": []
+      }
+    }
+  ]
+}

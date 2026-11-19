@@ -1,0 +1,112 @@
+{
+  "timestamp": "2026-06-17T10:00:00Z",
+  "tool_versions": {
+    "cng_benchmark": "0.0.0-synthetic"
+  },
+  "dataset_id": "synthetic-raster",
+  "format_id": "geozarr",
+  "params": {
+    "block_size": 512,
+    "scope": "product",
+    "note": "SYNTHETIC TEST FIXTURE, NOT A MEASUREMENT"
+  },
+  "artifacts": [],
+  "conditions": [],
+  "object_profile": {
+    "count": 60,
+    "total_bytes": 503316480,
+    "mean": 8388608,
+    "median": 8388608,
+    "p50": 8388608,
+    "p90": 10066329.6,
+    "p95": 10905190.4,
+    "p99": 11744051.2,
+    "min_bytes": 4194304,
+    "max_bytes": 12582912,
+    "histogram": [
+      {
+        "lower": 4194304,
+        "upper": 8388608,
+        "count": 30
+      },
+      {
+        "lower": 8388608,
+        "upper": 16777216,
+        "count": 30
+      }
+    ],
+    "tier_fit": [],
+    "highest_tier": null
+  },
+  "object_layouts": [
+    {
+      "kind": "geozarr",
+      "name": "B04",
+      "size_bytes": 503316480,
+      "chunk_shape": [
+        512,
+        512
+      ],
+      "shard_shape": [
+        2048,
+        2048
+      ],
+      "chunks_per_shard": 16,
+      "codec": "zstd",
+      "multiscale_levels": 3,
+      "shard_count": 60,
+      "compression_ratio": 2.3,
+      "scale_offset": true,
+      "stored_dtype": "uint16",
+      "overview_bytes": 104857600,
+      "grid_group": null,
+      "native_level": null
+    }
+  ],
+  "metrics": [
+    {
+      "name": "write_elapsed",
+      "value": 30,
+      "unit": "s"
+    },
+    {
+      "name": "write_throughput",
+      "value": 16777216,
+      "unit": "bytes/s"
+    },
+    {
+      "name": "read_latency_p50",
+      "value": 0.08,
+      "unit": "s"
+    },
+    {
+      "name": "display_z8_latency",
+      "value": 0.15,
+      "unit": "s",
+      "detail": {
+        "tile": "8/1/1",
+        "chunks": 4,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_z12_latency",
+      "value": 0.1,
+      "unit": "s",
+      "detail": {
+        "tile": "12/1/1",
+        "chunks": 1,
+        "approx": false,
+        "bytes": 1000
+      }
+    },
+    {
+      "name": "display_scenarios",
+      "value": 2,
+      "detail": {
+        "scenarios": []
+      }
+    }
+  ]
+}

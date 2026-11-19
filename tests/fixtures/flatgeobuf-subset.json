@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-06-17T10:00:00Z",
+  "tool_versions": {
+    "cng_benchmark": "0.0.0-synthetic"
+  },
+  "dataset_id": "synthetic-vector",
+  "format_id": "flatgeobuf",
+  "params": {
+    "block_size": 512,
+    "scope": "product",
+    "note": "SYNTHETIC TEST FIXTURE, NOT A MEASUREMENT"
+  },
+  "artifacts": [],
+  "conditions": [],
+  "object_profile": {
+    "count": 1,
+    "total_bytes": 73400320,
+    "mean": 73400320,
+    "median": 73400320,
+    "p50": 73400320,
+    "p90": 88080384,
+    "p95": 95420416,
+    "p99": 102760448,
+    "min_bytes": 36700160,
+    "max_bytes": 110100480,
+    "histogram": [
+      {
+        "lower": 36700160,
+        "upper": 73400320,
+        "count": 0
+      },
+      {
+        "lower": 73400320,
+        "upper": 146800640,
+        "count": 1
+      }
+    ],
+    "tier_fit": [
+      "warm"
+    ],
+    "highest_tier": "warm"
+  },
+  "object_layouts": [
+    {
+      "kind": "flatgeobuf",
+      "name": "lakes",
+      "size_bytes": 73400320,
+      "geometry_type": "Polygon",
+      "num_features": 1000,
+      "has_spatial_index": true,
+      "index_node_size": 16,
+      "header_bytes": 1000,
+      "index_bytes": 100000,
+      "feature_bytes": 73299320,
+      "codec": "none",
+      "compression_ratio": 1,
+      "features_dropped": 20,
+      "content_subset": true,
+      "features_sentinel": 0,
+      "geometry_fabricated": false,
+      "features_synthesized": 5,
+      "geometry_synthesized": true
+    }
+  ],
+  "metrics": [
+    {
+      "name": "write_elapsed",
+      "value": 5,
+      "unit": "s"
+    },
+    {
+      "name": "write_throughput",
+      "value": 14680064,
+      "unit": "bytes/s"
+    },
+    {
+      "name": "read_skipped",
+      "value": 0,
+      "detail": {
+        "error": "synthetic failure"
+      }
+    },
+    {
+      "name": "read_decoded_throughput",
+      "value": null,
+      "unit": "decoded-bytes/s"
+    }
+  ]
+}
