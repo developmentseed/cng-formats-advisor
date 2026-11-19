@@ -25,15 +25,15 @@ import { Stepper } from './Stepper';
 import { TopologyStage } from './TopologyStage';
 import { Welcome } from './Welcome';
 
-type Theme = 'auto' | 'light' | 'dark';
+type Theme = 'light' | 'dark';
 type View = 'welcome' | StepId;
 
 function readTheme(): Theme {
   try {
     const t = localStorage.getItem('cng-advisor-theme');
-    return t === 'light' || t === 'dark' ? t : 'auto';
+    return t === 'dark' ? 'dark' : 'light';
   } catch {
-    return 'auto';
+    return 'light';
   }
 }
 
@@ -99,8 +99,7 @@ export function App() {
   // Theme: a per-viewer convenience in localStorage.
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'auto') delete root.dataset.theme;
-    else root.dataset.theme = theme;
+    root.dataset.theme = theme;
     try {
       localStorage.setItem('cng-advisor-theme', theme);
     } catch {
@@ -268,7 +267,7 @@ export function App() {
     }
   }, []);
 
-  const nextTheme: Record<Theme, Theme> = { auto: 'light', light: 'dark', dark: 'auto' };
+  const nextTheme: Record<Theme, Theme> = { light: 'dark', dark: 'light' };
 
   const header = (
     <header className="site-header">
@@ -301,9 +300,9 @@ export function App() {
             className="pill"
             onClick={() => setTheme(nextTheme[theme])}
             aria-label={`Theme: ${theme}. Select to change.`}
-            title={`Theme: ${theme === 'auto' ? 'system' : theme}`}
+            title={theme === 'light' ? 'Switch to the dark theme' : 'Switch to the light theme'}
           >
-            {theme === 'auto' ? '◐' : theme === 'light' ? '☀' : '☾'}
+            {theme === 'light' ? '☾' : '☀'}
           </button>
         </div>
       </div>
