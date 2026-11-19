@@ -1,5 +1,5 @@
 /** The "Copy summary" Markdown: the decision path and the ranking. */
-import { FAMILIES } from './data/families';
+import { FAMILIES, focusOption } from './data/families';
 import { FORMATS } from './data/formats';
 import { FRAMEWORK_URL } from './data/guide';
 import { INTENTS, INTENT_LABEL } from './data/intents';
@@ -58,6 +58,8 @@ export function buildSummary(
   if (ranking && s.topology) {
     lines.push('## Stage 2: topology and refinements', '');
     lines.push(`- Topology: ${FAMILIES[s.topology].label}`);
+    const focus = focusOption(s.topology, s.familyFocus);
+    lines.push(`- ${FAMILIES[s.topology].focusQuestion} ${focus ? `${focus.label} (favours ${FORMATS[focus.favours].name})` : 'Not sure'}`);
     lines.push(`- Intent weights (0-3): ${INTENTS.map((i) => `${INTENT_LABEL[i]} ${s.intentWeights[i]}`).join(', ')}`);
     lines.push(`- Lowest maturity accepted: L${s.minMaturity}`);
     lines.push(`- Interpretation encoding importance: ${s.encodingImportance}`);

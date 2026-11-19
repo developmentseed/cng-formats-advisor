@@ -21,7 +21,7 @@ describe('steps', () => {
     const x = st(presetState('case1'));
     expect(firstStep(x)).toBe('result');
     expect(x.control.summary).toBe('Free choice');
-    expect(x.shape.summary).toBe('2D raster');
+    expect(x.shape.summary).toBe('2D raster · COG');
     expect(x.priorities.summary).toBe('Visualization, Distribution');
     expect(x.result.summary).toBe('COG first');
   });

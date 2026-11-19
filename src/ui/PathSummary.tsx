@@ -1,4 +1,5 @@
-import { FAMILIES } from '../framework/data/families';
+import { FAMILIES, focusOption } from '../framework/data/families';
+import { FORMATS } from '../framework/data/formats';
 import { INTENTS, INTENT_LABEL } from '../framework/data/intents';
 import type { AppState } from '../framework/state';
 import { OUTCOME_SHORT, type StepId } from '../framework/steps';
@@ -21,7 +22,14 @@ export function PathSummary({
     { step: 'control', label: 'Control', value: OUTCOME_SHORT[control.kind] },
   ];
   if (control.continuesToStage2) {
-    rows.push({ step: 'shape', label: 'Shape', value: state.topology ? FAMILIES[state.topology].label : 'not set' });
+    const focus = focusOption(state.topology, state.familyFocus);
+    rows.push({
+      step: 'shape',
+      label: 'Shape',
+      value: state.topology
+        ? `${FAMILIES[state.topology].label}${focus ? ` · ${focus.label.split(':')[0]} (favours ${FORMATS[focus.favours].name})` : ''}`
+        : 'not set',
+    });
     rows.push({
       step: 'priorities',
       label: 'Priorities',

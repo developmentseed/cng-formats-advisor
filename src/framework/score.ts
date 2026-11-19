@@ -8,12 +8,13 @@
  * candidates in the family (neutral). No format is removed: all family members
  * are ranked.
  */
-import { FAMILIES } from './data/families';
+import { FAMILIES, focusOption } from './data/families';
 import { FORMATS, MATURITY_SCALE } from './data/formats';
 import { REF } from './data/guide';
 import { INTENTS, INTENT_LABEL, INTENT_NOTES, PROCESSING_LAYOUT_ADVICE } from './data/intents';
 import {
   CLOSE_MARGIN,
+  FAMILY_FIT_TERM,
   ENCODING_TERM,
   INTENT_FIT,
   MATURITY_TERM,
@@ -144,6 +145,21 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
           ref: fit.ref,
         });
       }
+    }
+
+    const focus = focusOption(inputs.topology, inputs.familyFocus);
+    if (focus) {
+      const favoured = focus.favours === format;
+      terms.push({
+        kind: 'family-fit',
+        label: 'Family fit',
+        weight: FAMILY_FIT_TERM.weight.value,
+        value: favoured ? FAMILY_FIT_TERM.favoured.value : FAMILY_FIT_TERM.others.value,
+        explanation: favoured
+          ? `Your answer matches "${focus.guideText}".`
+          : `Your answer favours ${FORMATS[focus.favours].name}: "${focus.guideText}".`,
+        ref: REF.topology,
+      });
     }
 
     const mv = info.maturity === null ? neutralMaturity : maturityValue(info.maturity, inputs.minMaturity);

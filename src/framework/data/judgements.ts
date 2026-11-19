@@ -104,6 +104,19 @@ export const INTENT_TERM_RULE = c(
   REF.intent,
 );
 
+/**
+ * Family fit: the answer to the follow-up question of the family favours one
+ * member, from the "Where each member wins" column of the topology table.
+ * NOT a rule of the guide: the guide says that intent decides between the
+ * members. This term turns the column into a score input.
+ */
+export const FAMILY_FIT_TERM = {
+  weight: c(2, 'The topology table gives one condition per member under "Where each member wins". Weight 2 of 3: the condition is about the access pattern, which the intent weights do not fully capture.', REF.topology),
+  favoured: c(1, 'The member whose "Where each member wins" condition matches your answer.', REF.topology),
+  others: c(0.5, 'The other members: not excluded, only not favoured. "No format is disqualified by a single answer."', REF.whatItIs),
+  notSure: c('term off', 'When you are not sure, the term is not in the score.', REF.topology),
+};
+
 export const MATURITY_TERM = {
   weight: c(2, 'Maturity "may influence the final decision". It is one of four refinements. Weight 2 of 3: it matters, but it is "a warning, not a veto".', REF.maturity),
   /** Value is 1 at or above the lowest level you accept, minus this value per level below it, not below 0. */
@@ -165,6 +178,7 @@ export const CLOSE_MARGIN = c(
 
 export interface PresetInputs {
   topology: Cited<Topology | null>;
+  familyFocus: Cited<string | null>;
   intentWeights: Cited<Record<Intent, number>>;
   processingMode: Cited<ProcessingMode>;
   minMaturity: Cited<MaturityLevel>;
@@ -184,6 +198,7 @@ const MIN_MATURITY_ASSUMPTION =
 
 export const DEFAULT_INPUTS: PresetInputs = {
   topology: c(null, 'No default: you answer "what shape are the data?".', REF.topology),
+  familyFocus: c(null, 'Not sure, until you answer the follow-up question.', REF.topology),
   intentWeights: c(W(1, 1, 1, 1, 1), 'All intents equal until you set the mix: "Most real datasets serve several intents at once."', REF.intent),
   processingMode: c('on-the-fly', 'Default sub-choice. Text only, no effect on the score.', REF.intent),
   minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -195,6 +210,7 @@ export type CasePresetId = 'case1' | 'case2' | 'case3' | 'case4' | 'case5' | 'ca
 export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   case1: {
     topology: c('raster-2d', '"2D raster per scene".', REF.case1),
+    familyFocus: c('scene', '"Distribution and visualization, both served per scene." "Both intents are served per scene, which is why this case does not need a cube at all."', REF.case1),
     intentWeights: c(W(0, 0, 3, 3, 0), '"Distribution and visualization, both served per scene." Equal weights: the guide does not rank the two.', REF.case1),
     processingMode: c('on-the-fly', 'No processing intent. Default.', REF.case1),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -202,6 +218,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   case2: {
     topology: c('nd-cube', 'The guide says "2D raster over time" and "a year of RTC over a region is naturally a time × y × x × pol cube". We use the N-D cube branch. Both branches open COG and GeoZarr.', REF.case2),
+    familyFocus: c('across', '"The analysis half is what separates this case from case 1: it is asked over time, not per scene."', REF.case2),
     intentWeights: c(W(0, 3, 3, 2, 0), '"Advanced analysis and visualization lead, with distribution close behind but weighted a little lower." Analysis is processing.', REF.case2),
     processingMode: c('batched', '"Zarr sharding, sized to the object store\'s preference for large objects."', REF.case2),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -209,6 +226,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   case3: {
     topology: c('point-cloud', '"Point cloud, which opens {COPC, GeoParquet}".', REF.case3),
+    familyFocus: c('subset', '"Subset the same area cheaply": the spatial index and the level of detail are "the real gain".', REF.case3),
     intentWeights: c(W(0, 0, 3, 3, 3), '"Distribution, visualization, and data fusion." Equal weights: the guide does not rank them, but says "the fusion intent matters most here".', REF.case3),
     processingMode: c('on-the-fly', 'No processing intent. Default.', REF.case3),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -216,6 +234,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   case4: {
     topology: c('vector', '"Vector and tabular, which opens {GeoParquet, FlatGeobuf}".', REF.case4),
+    familyFocus: c('joins', '"GeoParquet wins on download and fusion"; fusion "usually rewards a tabular or columnar target where joins are cheap". Whole-row spatial subsetting "is not one that this intent mix asks for".', REF.case4),
     intentWeights: c(W(3, 0, 0, 3, 3), '"Distribution, download, and data fusion. Visualization is absent from this mix." Download is the archive-and-download intent.', REF.case4),
     processingMode: c('batched', 'No processing intent. Aggregation across passes, then row groups.', REF.case4),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -223,6 +242,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   case5: {
     topology: c('nd-cube', '"N-D grid, which opens {GeoZarr, COG}".', REF.case5),
+    familyFocus: c(null, 'The case does not state an access pattern. Not sure.', REF.case5),
     intentWeights: c(W(3, 0, 1, 3, 2), '"Distribution and download, with data fusion against the other SWOT products, and some visualization." The guide says this mix "is provisional".', REF.case5),
     processingMode: c('batched', 'No processing intent. Aggregation above the product.', REF.case5),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -230,6 +250,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   case6: {
     topology: c(null, 'Case 6 "does not reach the topology question at all".', REF.case6),
+    familyFocus: c(null, 'Not used: no Stage 2.', REF.case6),
     intentWeights: c(W(1, 1, 1, 1, 1), 'Not used: no Stage 2.', REF.case6),
     processingMode: c('on-the-fly', 'Not used: no Stage 2.', REF.case6),
     minMaturity: c(3, 'Not used: no Stage 2.', REF.case6),
@@ -237,6 +258,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   's2-l2b-snow': {
     topology: c('raster-2d', 'NOT IN THE GUIDE. Assumption: a per-tile 2D raster product.', REF.topology),
+    familyFocus: c(null, 'NOT IN THE GUIDE. Not sure.', REF.topology),
     intentWeights: c(W(1, 2, 2, 3, 0), 'NOT IN THE GUIDE. Assumption: distribution first, then visualization and time-series processing of snow cover, some download.', REF.intent),
     processingMode: c('batched', 'NOT IN THE GUIDE. Assumption: snow-cover time series over a season are batch jobs.', REF.intent),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
@@ -244,6 +266,7 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
   },
   'new-product': {
     topology: c(null, 'NOT IN THE GUIDE. You answer "what shape are the data?".', REF.topology),
+    familyFocus: c(null, 'NOT IN THE GUIDE. You answer the follow-up question.', REF.topology),
     intentWeights: c(W(1, 1, 1, 1, 1), 'NOT IN THE GUIDE. All intents equal until you set the mix.', REF.intent),
     processingMode: c('on-the-fly', 'Default.', REF.intent),
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),

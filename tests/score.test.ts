@@ -112,6 +112,25 @@ describe('Stage 2: score', () => {
     expect(r.measureNotes.join(' ')).toMatch(/only GeoZarr \(Zarr v3\) has data/);
   });
 
+  it('family fit: the answer favours one member; "not sure" turns the term off', () => {
+    const base = inputs({ topology: 'nd-cube' });
+    const off = rank(base)!;
+    expect(off.candidates.some((c) => c.terms.some((t) => t.kind === 'family-fit'))).toBe(false);
+    const across = rank({ ...base, familyFocus: 'across' })!;
+    const fit = (r: typeof across, f: string) => r.candidates.find((c) => c.format === f)!.terms.find((t) => t.kind === 'family-fit')!.value;
+    expect(fit(across, 'geozarr')).toBe(1);
+    expect(fit(across, 'cog')).toBe(0.5);
+    const slices = rank({ ...base, familyFocus: 'slices' })!;
+    expect(fit(slices, 'cog')).toBe(1);
+    const score = (r: typeof across, f: string) => r.candidates.find((c) => c.format === f)!.score;
+    expect(score(across, 'geozarr') - score(across, 'cog')).toBeGreaterThan(score(slices, 'geozarr') - score(slices, 'cog'));
+  });
+
+  it('family fit: an answer of another family is ignored', () => {
+    const r = rank(inputs({ topology: 'vector', familyFocus: 'across' }))!;
+    expect(r.candidates.some((c) => c.terms.some((t) => t.kind === 'family-fit'))).toBe(false);
+  });
+
   it('flags close scores', () => {
     const r = rank(inputs({ topology: 'point-cloud', intentWeights: { archive: 1, processing: 1, visualization: 1, distribution: 1, fusion: 1 } }))!;
     expect(typeof r.close).toBe('boolean');

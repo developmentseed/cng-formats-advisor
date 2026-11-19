@@ -14,12 +14,14 @@
   --link: #1c5cab;
   --focus: #2a78d6;
   --track: #e6e5e1;
-  /* Categorical slots 1-5 (validated light). */
+  /* Score bar groups, in bar order: intent and family fit, maturity, encoding,
+     object size, measured. Every pair that can touch passes the CVD and
+     normal-vision checks in both themes (dataviz validate_palette.js). */
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
   --series-4: #eda100;
-  --series-5: #e87ba4;
+  --series-5: #6250d6;
   /* Status (fixed). */
   --status-good: #0ca30c;
   --status-warning: #fab219;
@@ -58,7 +60,7 @@
     --series-2: #d95926;
     --series-3: #199e70;
     --series-4: #c98500;
-    --series-5: #d55181;
+    --series-5: #9085e9;
     --warning-bg: #3a2f10;
     --warning-border: #7a6420;
     --warning-text: #f7e2a6;
@@ -87,7 +89,7 @@
   --series-2: #d95926;
   --series-3: #199e70;
   --series-4: #c98500;
-  --series-5: #d55181;
+  --series-5: #9085e9;
   --warning-bg: #3a2f10;
   --warning-border: #7a6420;
   --warning-text: #f7e2a6;
@@ -661,6 +663,32 @@ span.brand {
 .ref {
   font-size: 0.8rem;
   white-space: nowrap;
+}
+
+.focus {
+  margin: 16px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.focus legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.focus-option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.focus-option input {
+  margin-top: 4px;
 }
 
 /* ---------- buttons and inputs ---------- */

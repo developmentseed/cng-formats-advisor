@@ -6,6 +6,7 @@ import {
   BENCHMARK_TERMS,
   CLOSE_MARGIN,
   ENCODING_TERM,
+  FAMILY_FIT_TERM,
   FIT_SCALE,
   INTENT_FIT,
   INTENT_TERM_RULE,
@@ -179,6 +180,10 @@ export function Method() {
           </thead>
           <tbody>
             <CitedRow name="Intent term" c={INTENT_TERM_RULE} />
+            <CitedRow name="Family fit weight" c={FAMILY_FIT_TERM.weight} />
+            <CitedRow name="Family fit, favoured member" c={FAMILY_FIT_TERM.favoured} />
+            <CitedRow name="Family fit, other members" c={FAMILY_FIT_TERM.others} />
+            <CitedRow name="Family fit, not sure" c={FAMILY_FIT_TERM.notSure} />
             <CitedRow name="Maturity weight" c={MATURITY_TERM.weight} />
             <CitedRow name="Maturity penalty per level below your limit" c={MATURITY_TERM.penaltyPerLevel} />
             <CitedRow name="Maturity not rated" c={MATURITY_TERM.notRated} />

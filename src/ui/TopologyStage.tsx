@@ -1,8 +1,21 @@
 import { FAMILIES, TOPOLOGY_NOTE } from '../framework/data/families';
 import { FORMATS } from '../framework/data/formats';
+import { REF } from '../framework/data/guide';
 import type { Topology } from '../framework/types';
+import { Ref } from './common';
 
-export function TopologyStage({ value, onChange }: { value: Topology | null; onChange: (t: Topology) => void }) {
+export function TopologyStage({
+  value,
+  focus,
+  onChange,
+  onFocus,
+}: {
+  value: Topology | null;
+  focus: string | null;
+  onChange: (t: Topology) => void;
+  onFocus: (id: string | null) => void;
+}) {
+  const family = value ? FAMILIES[value] : null;
   return (
     <div>
       <div className="topologies">
@@ -23,6 +36,30 @@ export function TopologyStage({ value, onChange }: { value: Topology | null; onC
       <p className="small muted" style={{ marginTop: 8, marginBottom: 0 }}>
         {TOPOLOGY_NOTE}
       </p>
+      {family && (
+        <fieldset className="focus">
+          <legend>
+            {family.focusQuestion} <span className="badge">Optional</span>
+          </legend>
+          <p className="small muted" style={{ margin: '0 0 6px' }}>
+            Each answer is one line of the guide's "Where each member wins" column. It favours one member in the
+            score. <Ref to={REF.topology} />
+          </p>
+          {family.focus.map((o) => (
+            <label key={o.id} className="focus-option">
+              <input type="radio" name="family-focus" checked={focus === o.id} onChange={() => onFocus(o.id)} />
+              <span>
+                {o.label}
+                <span className="small muted"> → {FORMATS[o.favours].name}</span>
+              </span>
+            </label>
+          ))}
+          <label className="focus-option">
+            <input type="radio" name="family-focus" checked={focus === null} onChange={() => onFocus(null)} />
+            <span>Not sure (no effect on the score)</span>
+          </label>
+        </fieldset>
+      )}
     </div>
   );
 }

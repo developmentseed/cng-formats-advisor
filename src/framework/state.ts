@@ -3,6 +3,7 @@
  * Uploaded benchmark data is NOT in the state: it stays in the browser memory.
  */
 import { BLANK_ANSWERS, getCase } from './data/cases';
+import { focusOption } from './data/families';
 import { INTENTS } from './data/intents';
 import { BENCHMARK_TERMS, DEFAULT_INPUTS, PRESET_INPUTS, type CasePresetId } from './data/judgements';
 import { CNES_TIERS, normalizeTiers } from './data/tiers';
@@ -50,6 +51,7 @@ export function defaultState(): AppState {
     preset: null,
     answers: { ...BLANK_ANSWERS },
     topology: DEFAULT_INPUTS.topology.value,
+    familyFocus: DEFAULT_INPUTS.familyFocus.value,
     intentWeights: { ...DEFAULT_INPUTS.intentWeights.value },
     processingMode: DEFAULT_INPUTS.processingMode.value,
     minMaturity: DEFAULT_INPUTS.minMaturity.value,
@@ -70,12 +72,18 @@ export function presetState(id: CasePresetId): AppState {
     preset: id,
     answers: { ...c.answers },
     topology: p.topology.value,
+    familyFocus: p.familyFocus.value,
     intentWeights: { ...p.intentWeights.value },
     processingMode: p.processingMode.value,
     minMaturity: p.minMaturity.value,
     encodingImportance: p.encodingImportance.value,
     tierPolicy: policy(c.tierPolicy, base.customTiers),
   };
+}
+
+/** A new shape resets the follow-up answer: each family has its own question. */
+export function withTopology(s: AppState, topology: Topology): AppState {
+  return topology === s.topology ? s : { ...s, topology, familyFocus: null };
 }
 
 export function withTierPolicy(s: AppState, kind: TierPolicyKind, custom: Tier[] = s.customTiers): AppState {
@@ -119,6 +127,7 @@ export function stateToHash(s: AppState): string {
   }
   if (s.answers.sourceFormat) q.set('sf', s.answers.sourceFormat);
   if (s.topology) q.set('t', TOPO_INV[s.topology]);
+  if (focusOption(s.topology, s.familyFocus)) q.set('ff', s.familyFocus!);
   q.set('w', INTENTS.map((i) => s.intentWeights[i]).join('.'));
   q.set('pm', inv(PM, s.processingMode));
   q.set('mm', String(s.minMaturity));
@@ -152,6 +161,8 @@ export function hashToState(hash: string): AppState | null {
 
   const t = q.get('t');
   if (t && TOPO[t]) s.topology = TOPO[t]!;
+  const ff = q.get('ff');
+  if (focusOption(s.topology, ff)) s.familyFocus = ff;
 
   const w = q.get('w')?.split('.').map(Number);
   if (w && w.length === INTENTS.length) {

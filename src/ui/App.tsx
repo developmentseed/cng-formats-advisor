@@ -6,7 +6,7 @@ import { getCase } from '../framework/data/cases';
 import { REF } from '../framework/data/guide';
 import type { CasePresetId } from '../framework/data/judgements';
 import { rank } from '../framework/score';
-import { defaultState, hashToState, presetState, stateToHash, type AppState } from '../framework/state';
+import { defaultState, hashToState, presetState, stateToHash, withTopology, type AppState } from '../framework/state';
 import { firstStep, nextStep, prevStep, STEP_TITLE, stepStatuses, type StepId } from '../framework/steps';
 import { buildSummary } from '../framework/summary';
 import type { AnyFormatId, GuideRef } from '../framework/types';
@@ -330,7 +330,7 @@ export function App() {
   };
   const blockedHint: Record<StepId, string> = {
     control: 'Answer the questions above to continue.',
-    shape: 'Select a shape to continue.',
+    shape: 'Select a shape to continue. The follow-up question is optional.',
     priorities: '',
     result: '',
   };
@@ -459,7 +459,12 @@ export function App() {
               </>
             )}
             {step === 'shape' && (
-              <TopologyStage value={state.topology} onChange={(topology) => setState({ ...state, topology })} />
+              <TopologyStage
+                value={state.topology}
+                focus={state.familyFocus}
+                onChange={(topology) => setState((s) => withTopology(s, topology))}
+                onFocus={(familyFocus) => setState((s) => ({ ...s, familyFocus }))}
+              />
             )}
             {step === 'priorities' && <Priorities state={state} onChange={setState} />}
             {nav}

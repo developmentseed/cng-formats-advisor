@@ -3,7 +3,7 @@
  * Step 1 is Stage 1 of the guide (control). Steps 2 and 3 are Stage 2
  * (topology, then refinements). Step 4 is the result.
  */
-import { FAMILIES } from './data/families';
+import { FAMILIES, focusOption } from './data/families';
 import { FORMATS } from './data/formats';
 import { INTENTS, INTENT_LABEL } from './data/intents';
 import type { AppState } from './state';
@@ -66,7 +66,11 @@ export function stepStatuses(s: AppState, control: ControlOutcome, ranking: Rank
       available: stage2,
       done: shapeDone,
       skipped: controlDone && !stage2,
-      summary: shapeDone && s.topology ? FAMILIES[s.topology].label.split(',')[0]! : '',
+      summary:
+        shapeDone && s.topology
+          ? FAMILIES[s.topology].label.split(',')[0]! +
+            (focusOption(s.topology, s.familyFocus) ? ` · ${FORMATS[focusOption(s.topology, s.familyFocus)!.favours].name}` : '')
+          : '',
     },
     priorities: {
       available: shapeDone,

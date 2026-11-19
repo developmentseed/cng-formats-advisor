@@ -8,7 +8,7 @@ import { Ref, WarningList } from './common';
 type Group = 'intent' | 'maturity' | 'encoding' | 'size' | 'measured';
 
 export const GROUP_LABEL: Record<Group, string> = {
-  intent: 'Intent fit',
+  intent: 'Intent and family fit',
   maturity: 'Maturity',
   encoding: 'Encoding',
   size: 'Object size',
@@ -16,7 +16,7 @@ export const GROUP_LABEL: Record<Group, string> = {
 };
 
 function groupOf(t: ScoreTerm): Group {
-  if (t.kind.startsWith('intent:')) return 'intent';
+  if (t.kind.startsWith('intent:') || t.kind === 'family-fit') return 'intent';
   if (t.kind === 'maturity') return 'maturity';
   if (t.kind === 'encoding') return 'encoding';
   if (t.kind === 'object-size') return 'size';
@@ -50,7 +50,7 @@ function ScoreBar({ c }: { c: RankedCandidate }) {
         {segs.map((t) => {
           const left = acc + t.points / 2;
           acc += t.points;
-          const name = groupOf(t) === 'intent' ? `Intent fit, ${t.label.toLowerCase()}` : t.label;
+          const name = t.kind.startsWith('intent:') ? `Intent fit, ${t.label.toLowerCase()}` : t.label;
           const text = `${name}. Weight ${t.weight}, value ${t.value?.toFixed(2)}. ${t.points.toFixed(1)} points.`;
           return (
             <div

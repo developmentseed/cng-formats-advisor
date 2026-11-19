@@ -108,6 +108,8 @@ export type BenchmarkCriterion = 'storage' | 'read' | 'display' | 'write';
 
 export interface ScoreInputs {
   topology: Topology | null;
+  /** Answer to the follow-up question of the family (an option id), or null for "not sure". */
+  familyFocus: string | null;
   intentWeights: Record<Intent, number>;
   processingMode: ProcessingMode;
   minMaturity: MaturityLevel;
@@ -127,6 +129,7 @@ export interface CandidateMeasurements {
 
 export type TermKind =
   | `intent:${Intent}`
+  | 'family-fit'
   | 'maturity'
   | 'encoding'
   | 'object-size'
