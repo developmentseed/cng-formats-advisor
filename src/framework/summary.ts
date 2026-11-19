@@ -13,7 +13,7 @@ export const OUTCOME_LABEL: Record<ControlOutcome['kind'], string> = {
   free: 'Free choice: go to the topology question',
   mandate: 'Archival-format mandate: optimize the mandated format and publish a cloud-optimized copy',
   repackage: 'Repackage: format free, content fixed as delivered',
-  virtual: 'Virtual Zarr (VirtualiZarr / Kerchunk / Icechunk): limited, better than nothing',
+  virtual: 'Virtual Zarr (VirtualiZarr / Kerchunk / Icechunk): range access to the data as they are, with no copy',
   'not-yet-possible': 'Not yet possible: say what is missing',
 };
 

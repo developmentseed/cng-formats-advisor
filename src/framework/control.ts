@@ -143,8 +143,8 @@ function decide(a: ControlAnswers): ControlOutcome {
     ref: REF.control,
     notes: [
       'Publish a virtual Zarr store with VirtualiZarr or Kerchunk. Store the index in Icechunk, kerchunk JSON or kerchunk Parquet.',
-      "Limits: chunk sizes are whatever the source chose, you cannot add overviews, and you inherit the source's codec.",
-      'It is more limited than a native store, but it is much better than whole-file download.',
+      "The store keeps the layout of the source: its chunk sizes, its codec, and no overviews.",
+      'In exchange, readers get range access without a copy or a rewrite of the data.',
     ],
   });
 }
