@@ -31,6 +31,13 @@ import type {
   Warning,
 } from './types';
 
+const FIT_WORD: Record<0 | 1 | 2 | 3, string> = {
+  3: 'Best fit',
+  2: 'Good fit',
+  1: 'Weak fit',
+  0: 'Poor fit',
+};
+
 export const BENCHMARK_CRITERIA: BenchmarkCriterion[] = ['storage', 'read', 'display', 'write'];
 
 export const BENCHMARK_LABEL: Record<BenchmarkCriterion, string> = {
@@ -132,7 +139,8 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
         label: INTENT_LABEL[intent],
         weight: w,
         value: fit.value / 3,
-        explanation: `Fit ${fit.value} of 3. ${fit.why}`,
+        explanation: `${FIT_WORD[fit.value]} for ${INTENT_LABEL[intent].toLowerCase()} (${fit.value} of 3).`,
+        detail: fit.why,
         ref: fit.ref,
       });
       if (fit.value === 0) {

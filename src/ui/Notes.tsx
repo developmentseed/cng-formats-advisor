@@ -214,32 +214,25 @@ export function Footer() {
     <footer className="site-footer">
       <div className="wrap">
         <p>
-          This dashboard applies the{' '}
+          Based on the{' '}
           <a href={FRAMEWORK_URL} target="_blank" rel="noopener noreferrer">
-            format selection decision framework
+            decision framework
           </a>{' '}
           of the{' '}
           <a href={GUIDE_BASE} target="_blank" rel="noopener noreferrer">
             Cloud-Optimized Geospatial Formats Guide
           </a>
-          . Measurements:{' '}
+          , from a study for CNES by Development Seed, on guide work supported by NASA IMPACT (now ODSI). Measurements:{' '}
           <a href={BENCHMARK_REPO_URL} target="_blank" rel="noopener noreferrer">
             cng-formats-benchmark
           </a>
+          .{' '}
+          <a href="https://github.com/developmentseed/cng-formats-advisor" target="_blank" rel="noopener noreferrer">
+            Source (MIT)
+          </a>
           .
         </p>
-        <p>
-          The framework was developed as part of a study for the Centre National d'Études Spatiales (CNES), carried out by
-          Development Seed. It builds on earlier work in the guide supported by NASA IMPACT (now NASA ODSI).
-        </p>
-        <p>
-          This site uses Plausible analytics. Uploaded files stay in your browser and are not sent anywhere.
-        </p>
-        <p>
-          <a href="https://github.com/developmentseed/cng-formats-advisor" target="_blank" rel="noopener noreferrer">
-            Source code (MIT)
-          </a>
-        </p>
+        <p>This site uses Plausible analytics. Uploaded files stay in your browser.</p>
       </div>
     </footer>
   );

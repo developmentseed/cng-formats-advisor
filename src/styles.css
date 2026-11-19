@@ -442,9 +442,13 @@ span.brand {
 
 .step-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 860px);
   gap: var(--gap);
   align-items: start;
+}
+
+.step-grid.with-aside {
+  grid-template-columns: minmax(0, 1fr) 300px;
 }
 
 .step-main {
@@ -546,7 +550,8 @@ span.brand {
 }
 
 @media (max-width: 900px) {
-  .step-grid {
+  .step-grid,
+  .step-grid.with-aside {
     grid-template-columns: minmax(0, 1fr);
   }
   .shortlist {
@@ -1221,13 +1226,20 @@ th.num {
 
 .site-footer {
   border-top: 1px solid var(--border);
-  padding: 16px 0 32px;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  padding: 12px 0 24px;
+  margin-top: 24px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .site-footer p {
-  margin: 4px 0;
+  margin: 2px 0;
+  max-width: 90ch;
+}
+
+.site-footer a {
+  color: inherit;
 }
 
 .sr-only {
@@ -1237,4 +1249,11 @@ th.num {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+.why-detail {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }

@@ -143,6 +143,8 @@ export interface ScoreTerm {
   /** weight * value / sum of weights, times 100. 0 when value is null. */
   points: number;
   explanation: string;
+  /** The guide text behind the value, shown under the explanation with the name of its source. */
+  detail?: string;
   ref?: GuideRef;
 }
 

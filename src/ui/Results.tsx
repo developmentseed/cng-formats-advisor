@@ -99,7 +99,24 @@ function Breakdown({ c }: { c: RankedCandidate }) {
                 <td className="num">{t.value === null ? '—' : t.value.toFixed(2)}</td>
                 <td className="num">{t.points.toFixed(1)}</td>
                 <td>
-                  {t.explanation} {t.ref && <Ref to={t.ref}>source</Ref>}
+                  {t.explanation}
+                  {t.detail ? (
+                    <span className="why-detail">
+                      {t.ref ? (
+                        <>
+                          From the guide, <Ref to={t.ref}>{t.ref.label}</Ref>:{' '}
+                        </>
+                      ) : null}
+                      {t.detail}
+                    </span>
+                  ) : (
+                    t.ref && (
+                      <>
+                        {' '}
+                        <Ref to={t.ref}>source</Ref>
+                      </>
+                    )
+                  )}
                 </td>
               </tr>
             ))}

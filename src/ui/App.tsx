@@ -122,28 +122,41 @@ export function App() {
     }
   }, [theme]);
 
-  // State -> URL hash (the share link). The welcome screen has no hash.
+  // History. A move to another step pushes an entry, so Back and Forward work.
+  // A change of an answer replaces the current entry: the URL hash is always the
+  // share link of the current state. The welcome screen has no hash.
   const hash = stateToHash(state);
+  const urlFor = (v: View, s: AppState) =>
+    window.location.pathname + window.location.search + (v === 'welcome' ? '' : stateToHash(s));
   useEffect(() => {
-    if (view === 'welcome') {
-      if (window.location.hash) window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    } else if (window.location.hash !== hash) {
-      window.history.replaceState(null, '', hash);
-    }
+    const url = urlFor(view, state);
+    const current = window.location.pathname + window.location.search + window.location.hash;
+    const entry = (window.history.state as { view?: View } | null)?.view;
+    if (url !== current || entry !== view) window.history.replaceState({ view }, '', url);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hash, view]);
 
-  // URL hash -> state, when a person pastes a link in the same tab.
+  // Back and Forward: our own entries change the step and keep the latest answers.
+  // An entry with no step (a pasted or edited link) loads the state from the hash.
   useEffect(() => {
-    const onHash = () => {
+    const onPop = (e: PopStateEvent) => {
+      const v = (e.state as { view?: View } | null)?.view;
+      if (v) {
+        if (v !== 'welcome') setVisited((prev) => new Set(prev).add(v));
+        setView(v);
+        return;
+      }
       const s = hashToState(window.location.hash);
       if (s) {
         setState(s);
         setVisited(new Set<StepId>(['control', 'shape', 'priorities']));
         setView(firstStep(statusesFor(s)));
+      } else {
+        setView('welcome');
       }
     };
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   // On a change of view: go to the top and move the focus to the heading.
@@ -204,33 +217,42 @@ export function App() {
     if (ok) track('Summary Copied');
   };
 
+  /** Go to a view and add a browser history entry. */
+  const navigate = (v: View, s: AppState = state) => {
+    if (v === view && s === state) return;
+    window.history.pushState({ view: v }, '', urlFor(v, s));
+    setView(v);
+  };
+
   const go = (v: View) => {
     if (v !== 'welcome') setVisited((prev) => new Set(prev).add(v));
-    setView(v);
+    navigate(v);
   };
 
   const onCase = (id: CasePresetId) => {
     const s = presetState(id);
     setState(s);
     setVisited(new Set<StepId>(['control', 'shape', 'priorities']));
-    setView(firstStep(statusesFor(s)));
+    navigate(firstStep(statusesFor(s)), s);
     track('Preset Selected', { preset: id });
   };
 
   const onStart = () => {
-    setState(defaultState());
+    const s = defaultState();
+    setState(s);
     setVisited(new Set<StepId>(['control']));
     setCasesOpen(false);
-    setView('control');
+    navigate('control', s);
   };
 
   const onRestart = () => {
-    setState(defaultState());
+    const s = defaultState();
+    setState(s);
     setRuns([]);
     setErrors([]);
     setSelection({});
     setCasesOpen(false);
-    setView('welcome');
+    navigate('welcome', s);
   };
 
   const onFiles = useCallback(async (files: File[]) => {
@@ -436,7 +458,7 @@ export function App() {
     body = (
       <main className="wrap step-page">
         {presetBanner}
-        <div className="step-grid">
+        <div className={`step-grid${ranking ? ' with-aside' : ''}`}>
           <section className="panel step-main" aria-labelledby="step-h">
             {stepHead}
             <p className="small">
@@ -469,11 +491,7 @@ export function App() {
             {step === 'priorities' && <Priorities state={state} onChange={setState} />}
             {nav}
           </section>
-          <ShortList
-            ranking={ranking}
-            endsInStage1={control.kind === 'virtual' || control.kind === 'not-yet-possible'}
-            onOpen={() => statuses.result.available && go('result')}
-          />
+          {ranking && <ShortList ranking={ranking} onOpen={() => statuses.result.available && go('result')} />}
         </div>
       </main>
     );
