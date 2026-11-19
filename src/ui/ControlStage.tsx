@@ -28,13 +28,7 @@ export function ControlStage({
   const set = (k: keyof ControlAnswers, v: Answer) => onChange({ ...answers, [k]: v });
 
   return (
-    <section className="panel" aria-labelledby="control-h">
-      <h2 id="control-h">
-        <span className="step">Stage 1</span> Control: do you have a choice?
-      </h2>
-      <p className="small">
-        <Ref to={REF.control} /> · <Ref to={REF.whichBranch}>How to tell which branch you are on</Ref>
-      </p>
+    <div>
 
       {qs.map((k) => {
         const isVirtual = k === 'chunkedInternally' || k === 'workableChunkSize' || k === 'sourceFormat';
@@ -82,45 +76,52 @@ export function ControlStage({
         );
       })}
 
+      {outcome.kind !== 'incomplete' && <OutcomeBox outcome={outcome} answers={answers} />}
+    </div>
+  );
+}
+
+/** The Stage 1 outcome, with what is missing and the notes. */
+export function OutcomeBox({ outcome, answers }: { outcome: ControlOutcome; answers: ControlAnswers }) {
+  return (
       <div
-        className={`outcome${outcome.kind === 'not-yet-possible' ? ' blocked' : ''}`}
-        role="status"
-        aria-live="polite"
-      >
-        <strong>{OUTCOME_LABEL[outcome.kind]}</strong>
-        {outcome.missing.length > 0 && (
-          <>
-            <p className="small" style={{ marginTop: 6 }}>
-              What is missing:
-            </p>
-            <ul className="small">
-              {outcome.missing.map((m) => (
-                <li key={m}>{VIRTUAL_TEST_TEXT[m].missing}</li>
-              ))}
-            </ul>
-          </>
-        )}
-        {outcome.notes.length > 0 && (
-          <WarningList items={outcome.notes.map((n) => ({ text: n, info: true }))} />
-        )}
-        {outcome.kind !== 'incomplete' && (
-          <p className="small" style={{ marginTop: 6, marginBottom: 0 }}>
-            <Ref to={outcome.ref} />
-            {outcome.kind === 'not-yet-possible' && (
-              <>
-                {' '}
-                · <Ref to={REF.case6} />
-              </>
-            )}
-            {answers.existingUsers && (
-              <>
-                {' '}
-                · <Ref to={REF.existingUsers} />
-              </>
-            )}
+      className={`outcome${outcome.kind === 'not-yet-possible' ? ' blocked' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
+      <strong>{OUTCOME_LABEL[outcome.kind]}</strong>
+      {outcome.missing.length > 0 && (
+        <>
+          <p className="small" style={{ marginTop: 6 }}>
+            What is missing:
           </p>
-        )}
-      </div>
-    </section>
+          <ul className="small">
+            {outcome.missing.map((m) => (
+              <li key={m}>{VIRTUAL_TEST_TEXT[m].missing}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {outcome.notes.length > 0 && (
+        <WarningList items={outcome.notes.map((n) => ({ text: n, info: true }))} />
+      )}
+      {outcome.kind !== 'incomplete' && (
+        <p className="small" style={{ marginTop: 6, marginBottom: 0 }}>
+          <Ref to={outcome.ref} />
+          {outcome.kind === 'not-yet-possible' && (
+            <>
+              {' '}
+              · <Ref to={REF.case6} />
+            </>
+          )}
+          {answers.existingUsers && (
+            <>
+              {' '}
+              · <Ref to={REF.existingUsers} />
+            </>
+          )}
+        </p>
+      )}
+    </div>
   );
 }

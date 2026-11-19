@@ -173,9 +173,7 @@ export function Results({ ranking, topology }: { ranking: Ranking; topology: Top
   const order: Group[] = ['intent', 'maturity', 'encoding', 'size', 'measured'];
   return (
     <section className="panel" aria-labelledby="results-h">
-      <h2 id="results-h">
-        <span className="step">Result</span> Ranked candidates
-      </h2>
+      <h2 id="results-h">Ranked candidates</h2>
       <p className="small muted">
         The score helps, you make the final call. No format is removed: a low score or a low maturity gives a warning.{' '}
         <Ref to={REF.whatItIs} />

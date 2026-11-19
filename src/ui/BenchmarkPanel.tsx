@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from 'react';
+import { useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { armsByFormat, deriveRun, displayLatencies, runWarnings, setWarnings } from '../framework/benchmark/criteria';
 import type { ParsedRun } from '../framework/benchmark/parse';
 import { quantityToBytes, type CasePreset, type Quantity } from '../framework/data/cases';
@@ -66,6 +66,7 @@ export function BenchmarkPanel({
   onFiles,
   onSelect,
   onClear,
+  weights,
 }: {
   runs: ParsedRun[];
   errors: UploadError[];
@@ -75,6 +76,8 @@ export function BenchmarkPanel({
   onFiles: (files: File[]) => void;
   onSelect: (format: AnyFormatId, runId: string) => void;
   onClear: () => void;
+  /** The weight pickers of the measured criteria. Shown after an upload. */
+  weights?: ReactNode;
 }) {
   const [over, setOver] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -91,7 +94,7 @@ export function BenchmarkPanel({
   return (
     <section className="panel" aria-labelledby="bench-h">
       <h2 id="bench-h">
-        <span className="step">Optional</span> Measurements
+        Measurements <span className="badge">Optional</span>
       </h2>
       <p className="small">
         When two candidates are close, measure them with{' '}
@@ -197,6 +200,7 @@ export function BenchmarkPanel({
             </button>
           </div>
           <WarningList items={setWarnings(runs).map((t) => ({ text: t }))} />
+          {weights && <div className="callout" style={{ marginTop: 8 }}>{weights}</div>}
 
           {(Object.entries(arms) as [AnyFormatId, ParsedRun[]][])
             .filter(([, list]) => list.length > 1)

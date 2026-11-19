@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { selectedMeasurements } from '../framework/benchmark/criteria';
 import { parseBenchmarkText, type ParsedRun } from '../framework/benchmark/parse';
 import { decideControl } from '../framework/control';
@@ -7,19 +7,24 @@ import { REF } from '../framework/data/guide';
 import type { CasePresetId } from '../framework/data/judgements';
 import { rank } from '../framework/score';
 import { defaultState, hashToState, presetState, stateToHash, type AppState } from '../framework/state';
+import { firstStep, nextStep, prevStep, STEP_TITLE, stepStatuses, type StepId } from '../framework/steps';
 import { buildSummary } from '../framework/summary';
-import type { AnyFormatId } from '../framework/types';
+import type { AnyFormatId, GuideRef } from '../framework/types';
 import { track } from '../lib/plausible';
 import { BenchmarkPanel, type UploadError } from './BenchmarkPanel';
 import { Ref } from './common';
-import { ControlStage } from './ControlStage';
+import { ControlStage, OutcomeBox } from './ControlStage';
 import { CrossCutting, Footer, Method, Preconditions, PresetOutcome } from './Notes';
-import { PresetPicker } from './PresetPicker';
-import { Refinements } from './Refinements';
+import { PathSummary } from './PathSummary';
+import { MeasuredWeights, Priorities } from './Refinements';
 import { Results } from './Results';
+import { ShortList } from './ShortList';
+import { Stepper } from './Stepper';
 import { TopologyStage } from './TopologyStage';
+import { Welcome } from './Welcome';
 
 type Theme = 'auto' | 'light' | 'dark';
+type View = 'welcome' | StepId;
 
 function readTheme(): Theme {
   try {
@@ -30,8 +35,16 @@ function readTheme(): Theme {
   }
 }
 
-function initialState(): AppState {
-  return hashToState(window.location.hash) ?? defaultState();
+function statusesFor(s: AppState) {
+  const c = decideControl(s.answers);
+  return stepStatuses(s, c, c.continuesToStage2 ? rank(s) : null);
+}
+
+/** A share link opens on the result (or the first open question). No hash: the welcome screen. */
+function initial(): { state: AppState; view: View } {
+  const s = hashToState(window.location.hash);
+  if (!s) return { state: defaultState(), view: 'welcome' };
+  return { state: s, view: firstStep(statusesFor(s)) };
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -57,13 +70,44 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+const KICKER: Record<StepId, string> = {
+  control: 'Step 1 of 4 · Stage 1 in the guide: control',
+  shape: 'Step 2 of 4 · Stage 2 in the guide: topology',
+  priorities: 'Step 3 of 4 · Stage 2 in the guide: refinements',
+  result: 'Step 4 of 4',
+};
+
+const INTRO: Record<Exclude<StepId, 'result'>, { text: string; refs: GuideRef[] }> = {
+  control: {
+    text: 'The framework asks first if the choice is yours. Your answers can settle the question before format comes up.',
+    refs: [REF.control, REF.whichBranch],
+  },
+  shape: {
+    text: 'The shape of the data selects a family of formats. Your priorities then rank the members.',
+    refs: [REF.topology],
+  },
+  priorities: {
+    text: 'Tell what the data are for. The short list changes with each answer.',
+    refs: [REF.refinements],
+  },
+};
+
 export function App() {
-  const [state, setState] = useState<AppState>(initialState);
+  const init = useMemo(initial, []);
+  const [state, setState] = useState<AppState>(init.state);
+  const [view, setView] = useState<View>(init.view);
+  // A share link or a case study fills in every step; a fresh start fills in none.
+  const [visited, setVisited] = useState<Set<StepId>>(
+    () => new Set(init.view === 'welcome' ? [] : (['control', 'shape', 'priorities'] as StepId[])),
+  );
   const [theme, setTheme] = useState<Theme>(readTheme);
   const [runs, setRuns] = useState<ParsedRun[]>([]);
   const [errors, setErrors] = useState<UploadError[]>([]);
   const [selection, setSelection] = useState<Partial<Record<AnyFormatId, string>>>({});
   const [status, setStatus] = useState('');
+  const [casesOpen, setCasesOpen] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const firstRender = useRef(true);
 
   // Theme: a per-viewer convenience in localStorage.
   useEffect(() => {
@@ -77,21 +121,39 @@ export function App() {
     }
   }, [theme]);
 
-  // State -> URL hash (the share link).
+  // State -> URL hash (the share link). The welcome screen has no hash.
   const hash = stateToHash(state);
   useEffect(() => {
-    if (window.location.hash !== hash) window.history.replaceState(null, '', hash);
-  }, [hash]);
+    if (view === 'welcome') {
+      if (window.location.hash) window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } else if (window.location.hash !== hash) {
+      window.history.replaceState(null, '', hash);
+    }
+  }, [hash, view]);
 
   // URL hash -> state, when a person pastes a link in the same tab.
   useEffect(() => {
     const onHash = () => {
       const s = hashToState(window.location.hash);
-      if (s) setState(s);
+      if (s) {
+        setState(s);
+        setVisited(new Set<StepId>(['control', 'shape', 'priorities']));
+        setView(firstStep(statusesFor(s)));
+      }
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // On a change of view: go to the top and move the focus to the heading.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0 });
+    heading.current?.focus({ preventScroll: true });
+  }, [view]);
 
   const control = useMemo(() => decideControl(state.answers), [state.answers]);
   const measures = useMemo(
@@ -102,6 +164,7 @@ export function App() {
     () => (control.continuesToStage2 ? rank(state, measures) : null),
     [control.continuesToStage2, state, measures],
   );
+  const statuses = useMemo(() => stepStatuses(state, control, ranking), [state, control, ranking]);
   const preset = state.preset ? getCase(state.preset) : undefined;
   const modified = !!state.preset && stateToHash(presetState(state.preset)) !== hash;
 
@@ -140,9 +203,33 @@ export function App() {
     if (ok) track('Summary Copied');
   };
 
-  const onPreset = (id: CasePresetId) => {
-    setState(presetState(id));
+  const go = (v: View) => {
+    if (v !== 'welcome') setVisited((prev) => new Set(prev).add(v));
+    setView(v);
+  };
+
+  const onCase = (id: CasePresetId) => {
+    const s = presetState(id);
+    setState(s);
+    setVisited(new Set<StepId>(['control', 'shape', 'priorities']));
+    setView(firstStep(statusesFor(s)));
     track('Preset Selected', { preset: id });
+  };
+
+  const onStart = () => {
+    setState(defaultState());
+    setVisited(new Set<StepId>(['control']));
+    setCasesOpen(false);
+    setView('control');
+  };
+
+  const onRestart = () => {
+    setState(defaultState());
+    setRuns([]);
+    setErrors([]);
+    setSelection({});
+    setCasesOpen(false);
+    setView('welcome');
   };
 
   const onFiles = useCallback(async (files: File[]) => {
@@ -171,99 +258,225 @@ export function App() {
     }
   }, []);
 
-  const hasBenchmark = runs.length > 0;
   const nextTheme: Record<Theme, Theme> = { auto: 'light', light: 'dark', dark: 'auto' };
+
+  const header = (
+    <header className="site-header">
+      <div className="wrap header-inner">
+        {view === 'welcome' ? (
+          <span className="brand">CNG Formats Advisor</span>
+        ) : (
+          <button type="button" className="brand" onClick={() => go('welcome')}>
+            CNG Formats Advisor
+          </button>
+        )}
+        <div className="actions">
+          {view !== 'welcome' && (
+            <>
+              <button type="button" className="btn" onClick={onShare} aria-label="Copy share link">
+                <span className="long">Copy share link</span>
+                <span className="short" aria-hidden="true">Share</span>
+              </button>
+              <button type="button" className="btn" onClick={onSummary} aria-label="Copy summary">
+                <span className="long">Copy summary</span>
+                <span className="short" aria-hidden="true">Summary</span>
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setTheme(nextTheme[theme])}
+            aria-label={`Theme: ${theme}. Select to change.`}
+          >
+            <span className="long">Theme: {theme === 'auto' ? 'system' : theme}</span>
+            <span className="short" aria-hidden="true">
+              {theme === 'auto' ? '◐' : theme === 'light' ? '☀' : '☾'}
+            </span>
+          </button>
+        </div>
+      </div>
+      <div className="wrap">
+        <span className="small muted status" role="status" aria-live="polite">
+          {status}
+        </span>
+      </div>
+    </header>
+  );
+
+  if (view === 'welcome') {
+    return (
+      <>
+        {header}
+        <Welcome onStart={onStart} onCase={onCase} casesOpen={casesOpen} />
+        <Footer />
+      </>
+    );
+  }
+
+  const step = view;
+  const prev = prevStep(step, statuses);
+  const next = nextStep(step, statuses);
+  const canNext = next !== null && statuses[next].available;
+
+  const nextLabel: Record<StepId, string> = {
+    control:
+      control.kind === 'virtual' || control.kind === 'not-yet-possible' ? 'See the result' : 'Next: the shape of the data',
+    shape: 'Next: your priorities',
+    priorities: 'See my short list',
+    result: '',
+  };
+  const blockedHint: Record<StepId, string> = {
+    control: 'Answer the questions above to continue.',
+    shape: 'Select a shape to continue.',
+    priorities: '',
+    result: '',
+  };
+
+  const presetBanner = preset && (
+    <div className="preset-banner small">
+      <span>
+        Case study loaded: <strong>{preset.title}</strong> ({preset.product}).{' '}
+        {!preset.inGuide && <span className="badge">Not in the guide</span>}
+        {modified && ' You changed some inputs.'}
+      </span>
+      <button
+        type="button"
+        className="link-btn small"
+        onClick={() => {
+          setCasesOpen(true);
+          go('welcome');
+        }}
+      >
+        Other case study
+      </button>
+    </div>
+  );
+
+  const stepHead = (
+    <>
+      <p className="kicker">{KICKER[step]}</p>
+      <h1 id="step-h" ref={heading} tabIndex={-1}>
+        {STEP_TITLE[step]}
+      </h1>
+    </>
+  );
+
+  const nav = (
+    <div className="step-nav">
+      <button type="button" className="btn" onClick={() => go(prev ?? 'welcome')}>
+        ‹ {prev ? 'Back' : 'Home'}
+      </button>
+      {step !== 'result' && (
+        <span className="step-nav-next">
+          {!canNext && blockedHint[step] && <span className="small muted">{blockedHint[step]}</span>}
+          <button type="button" className="btn primary" disabled={!canNext} onClick={() => next && go(next)}>
+            {nextLabel[step]} ›
+          </button>
+        </span>
+      )}
+    </div>
+  );
+
+  let body: ReactNode;
+  if (step === 'result') {
+    body = (
+      <main className="wrap result-page">
+        {presetBanner}
+        <div className="panel result-head">
+          {stepHead}
+          <PathSummary state={state} control={control} onGo={go} />
+        </div>
+        <div className={`result-grid${preset ? ' with-aside' : ''}`}>
+          <div className="col">
+            {ranking && state.topology ? (
+              <Results ranking={ranking} topology={state.topology} />
+            ) : (
+              <section className="panel">
+                <h2>{control.kind === 'virtual' ? 'Publish a virtual store' : 'No format decision yet'}</h2>
+                <OutcomeBox outcome={control} answers={state.answers} />
+              </section>
+            )}
+            {control.continuesToStage2 && (
+              <BenchmarkPanel
+                runs={runs}
+                errors={errors}
+                selection={selection}
+                tiers={state.tierPolicy.tiers}
+                preset={preset}
+                onFiles={onFiles}
+                onSelect={(f, id) => setSelection({ ...selection, [f]: id })}
+                onClear={() => {
+                  setRuns([]);
+                  setErrors([]);
+                  setSelection({});
+                }}
+                weights={<MeasuredWeights state={state} hasBenchmark={runs.length > 0} onChange={setState} />}
+              />
+            )}
+            <section aria-labelledby="further-h" className="further">
+              <h2 id="further-h">Go further</h2>
+              <CrossCutting />
+              <Method />
+            </section>
+          </div>
+          {preset && (
+            <div className="col">
+              <PresetOutcome preset={preset} modified={modified} />
+            </div>
+          )}
+        </div>
+        {nav}
+      </main>
+    );
+  } else {
+    const intro = INTRO[step];
+    body = (
+      <main className="wrap step-page">
+        {presetBanner}
+        <div className="step-grid">
+          <section className="panel step-main" aria-labelledby="step-h">
+            {stepHead}
+            <p className="small">
+              {intro.text}{' '}
+              {intro.refs.map((r, i) => (
+                <span key={r.url}>
+                  {i > 0 && ' · '}
+                  <Ref to={r} />
+                </span>
+              ))}
+            </p>
+            {step === 'control' && (
+              <>
+                <Preconditions />
+                <ControlStage
+                  answers={state.answers}
+                  outcome={control}
+                  onChange={(answers) => setState({ ...state, answers })}
+                />
+              </>
+            )}
+            {step === 'shape' && (
+              <TopologyStage value={state.topology} onChange={(topology) => setState({ ...state, topology })} />
+            )}
+            {step === 'priorities' && <Priorities state={state} onChange={setState} />}
+            {nav}
+          </section>
+          <ShortList
+            ranking={ranking}
+            endsInStage1={control.kind === 'virtual' || control.kind === 'not-yet-possible'}
+            onOpen={() => statuses.result.available && go('result')}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>
-      <header className="site-header">
-        <div className="wrap">
-          <div>
-            <h1>CNG Formats Advisor</h1>
-            <p>
-              Go from data that you must publish to a short list of cloud-optimized formats. This dashboard applies the
-              format selection decision framework of the Cloud-Optimized Geospatial Formats Guide.{' '}
-              <Ref to={REF.whatItIs}>Read the framework</Ref>
-            </p>
-          </div>
-          <div className="actions">
-            <button type="button" className="btn primary" onClick={onShare}>
-              Copy share link
-            </button>
-            <button type="button" className="btn" onClick={onSummary}>
-              Copy summary
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setTheme(nextTheme[theme])}
-              aria-label={`Theme: ${theme}. Select to change.`}
-            >
-              Theme: {theme === 'auto' ? 'system' : theme}
-            </button>
-            <span className="small muted status" role="status" aria-live="polite">
-              {status}
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <main className="wrap layout">
-        <div className="col">
-          <PresetPicker
-            current={state.preset}
-            modified={modified}
-            onPick={onPreset}
-            onReset={() => setState(defaultState())}
-          />
-          <Preconditions />
-          <ControlStage answers={state.answers} outcome={control} onChange={(answers) => setState({ ...state, answers })} />
-          {control.continuesToStage2 && (
-            <TopologyStage value={state.topology} onChange={(topology) => setState({ ...state, topology })} />
-          )}
-          {control.continuesToStage2 && state.topology && (
-            <Refinements state={state} hasBenchmark={hasBenchmark} onChange={setState} />
-          )}
-        </div>
-
-        <div className="col">
-          {preset && <PresetOutcome preset={preset} modified={modified} />}
-          {ranking && state.topology ? (
-            <Results ranking={ranking} topology={state.topology} />
-          ) : (
-            <section className="panel">
-              <h2>Result</h2>
-              <p className="muted" style={{ marginBottom: 0 }}>
-                {control.kind === 'incomplete'
-                  ? 'Answer the Stage 1 questions to see the result.'
-                  : control.kind === 'virtual'
-                    ? 'No format ranking: Stage 1 ends in a virtual store. The grouping lever is not available: you inherit the source chunking.'
-                    : control.kind === 'not-yet-possible'
-                      ? 'No format decision is possible yet. See what is missing in Stage 1.'
-                      : 'Select the shape of the data to rank the candidates.'}
-              </p>
-            </section>
-          )}
-          {control.continuesToStage2 && (
-            <BenchmarkPanel
-              runs={runs}
-              errors={errors}
-              selection={selection}
-              tiers={state.tierPolicy.tiers}
-              preset={preset}
-              onFiles={onFiles}
-              onSelect={(f, id) => setSelection({ ...selection, [f]: id })}
-              onClear={() => {
-                setRuns([]);
-                setErrors([]);
-                setSelection({});
-              }}
-            />
-          )}
-          <CrossCutting />
-          <Method />
-        </div>
-      </main>
+      {header}
+      <Stepper current={step} statuses={statuses} visited={visited} onGo={go} onRestart={onRestart} />
+      {body}
       <Footer />
     </>
   );

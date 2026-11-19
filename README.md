@@ -7,12 +7,16 @@ of the Cloud-Optimized Geospatial Formats Guide.
 Live site: <https://developmentseed.org/cng-formats-advisor/>
 
 The dashboard helps you go from data that you must publish to a short list of
-cloud-optimized format candidates:
+cloud-optimized format candidates. A welcome screen offers two ways in: start
+with your own product, or explore a case study. Then four steps, one at a time,
+with a live short list beside the questions:
 
-1. **Stage 1, control.** Do the data exist? Can you reprocess, repackage or
+1. **Control** (Stage 1 of the guide). Do the data exist? Can you reprocess, repackage or
    virtualize them? This stage can end with Virtual Zarr or "not yet possible".
-2. **Stage 2, topology and refinements.** The shape of the data selects a format
-   family. A transparent weighted score ranks the members: intent mix, ecosystem
+2. **Shape** (Stage 2: topology). The shape of the data selects a format family.
+3. **Priorities** (Stage 2: refinements). The intent mix first, the other
+   refinements in a collapsed block.
+4. **Result.** A transparent weighted score ranks the members: intent mix, ecosystem
    maturity, interpretation encoding and, with benchmark data, object size and
    measured performance. Each term shows its weight, its value and a link to the
    guide.

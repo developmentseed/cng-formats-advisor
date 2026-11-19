@@ -1,18 +1,10 @@
 import { FAMILIES, TOPOLOGY_NOTE } from '../framework/data/families';
 import { FORMATS } from '../framework/data/formats';
-import { REF } from '../framework/data/guide';
 import type { Topology } from '../framework/types';
-import { Ref } from './common';
 
 export function TopologyStage({ value, onChange }: { value: Topology | null; onChange: (t: Topology) => void }) {
   return (
-    <section className="panel" aria-labelledby="topo-h">
-      <h2 id="topo-h">
-        <span className="step">Stage 2</span> What shape are the data?
-      </h2>
-      <p className="small">
-        The shape selects a format family. Intent decides between the members. <Ref to={REF.topology} />
-      </p>
+    <div>
       <div className="topologies">
         {Object.values(FAMILIES).map((f) => (
           <button
@@ -31,6 +23,6 @@ export function TopologyStage({ value, onChange }: { value: Topology | null; onC
       <p className="small muted" style={{ marginTop: 8, marginBottom: 0 }}>
         {TOPOLOGY_NOTE}
       </p>
-    </section>
+    </div>
   );
 }

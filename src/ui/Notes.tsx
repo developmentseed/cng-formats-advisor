@@ -18,8 +18,8 @@ import { Ref, WarningList } from './common';
 
 export function Preconditions() {
   return (
-    <details className="panel">
-      <summary>Before you start: preconditions P1 and P2</summary>
+    <details className="more">
+      <summary>Before you start: is your format cloud-optimized at all? (P1 and P2)</summary>
       <p className="small">
         <strong>P1. The format must support partial and parallel reads over HTTP.</strong> A reader loads the metadata
         in a single read, then fetches only the chunks or tiles that it needs with HTTP range requests.

@@ -9,29 +9,15 @@ import { Ref, Segmented, WeightPicker } from './common';
 
 const MiB = 1024 * 1024;
 
-export function Refinements({
-  state,
-  hasBenchmark,
-  onChange,
-}: {
-  state: AppState;
-  hasBenchmark: boolean;
-  onChange: (s: AppState) => void;
-}) {
+/** Step 3: the intent mix first, the other refinements in a collapsed block. */
+export function Priorities({ state, onChange }: { state: AppState; onChange: (s: AppState) => void }) {
   const custom = state.customTiers;
   const setCustom = (tiers: Tier[]) => onChange(withTierPolicy(state, 'custom', tiers));
 
   return (
-    <section className="panel" aria-labelledby="ref-h">
-      <h2 id="ref-h">
-        <span className="step">Stage 2</span> Refinements
-      </h2>
-      <p className="small">
-        Four refinements rank the candidates inside the family. <Ref to={REF.refinements} />
-      </p>
-
+    <div>
       <div className="field">
-        <span className="label">Intent mix (weight 0 to 3)</span>
+        <span className="label">What are the data for? Give each intent a weight from 0 (not an intent) to 3.</span>
         <span className="small muted">
           Most products serve several intents. The intent mix decides the ranking. <Ref to={REF.intent} />
         </span>
@@ -48,6 +34,8 @@ export function Refinements({
         {state.intentWeights.fusion > 0 && <span className="small muted">{INTENT_NOTES.fusion}</span>}
       </div>
 
+      <details className="more">
+        <summary>More refinements: processing, maturity, encoding, object size</summary>
       <div className="field">
         <div className="field-row">
           <span className="label" id="pm-l">
@@ -177,6 +165,16 @@ export function Refinements({
         </span>
       </div>
 
+      </details>
+    </div>
+  );
+}
+
+
+/** The weights of the measured criteria, in the measurements panel. */
+export function MeasuredWeights({ state, hasBenchmark, onChange }: { state: AppState; hasBenchmark: boolean; onChange: (s: AppState) => void }) {
+  return (
+    <div>
       <div className="field">
         <span className="label">Measured criteria (weight 0 to 3)</span>
         <span className="small muted">
@@ -196,6 +194,6 @@ export function Refinements({
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
