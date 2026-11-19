@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { selectedMeasurements } from '../framework/benchmark/criteria';
+import { mergeRuns, selectedMeasurements } from '../framework/benchmark/criteria';
 import { parseBenchmarkText, type ParsedRun } from '../framework/benchmark/parse';
 import { decideControl } from '../framework/control';
 import { getCase } from '../framework/data/cases';
@@ -107,6 +107,7 @@ export function App() {
   const [status, setStatus] = useState('');
   const [casesOpen, setCasesOpen] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const uploadSeq = useRef(0);
   const firstRender = useRef(true);
 
   // Theme: a per-viewer convenience in localStorage.
@@ -247,8 +248,9 @@ export function App() {
     const flat = results.flat();
     const newRuns = flat.filter((r) => r.ok).map((r) => (r as { ok: true; run: ParsedRun }).run);
     const newErrors = [...skipped, ...flat.filter((r) => !r.ok).map((r) => r as UploadError)];
-    const names = new Set(json.map((f) => f.name));
-    setRuns((prev) => [...prev.filter((r) => !names.has(r.fileName)), ...newRuns]);
+    uploadSeq.current += 1;
+    const seq = uploadSeq.current;
+    setRuns((prev) => mergeRuns(prev, newRuns, seq));
     setErrors(newErrors);
     if (newRuns.length) {
       track('Benchmark Loaded', {

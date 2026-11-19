@@ -188,6 +188,11 @@ export function Results({ ranking, topology }: { ranking: Ranking; topology: Top
           on your own data, then upload the results below.
         </div>
       )}
+      {ranking.measureNotes.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <WarningList items={ranking.measureNotes.map((t) => ({ text: t, info: true, ref: REF.quantitative }))} />
+        </div>
+      )}
       <ScoreLegend groups={order.filter((g) => groups.includes(g))} />
       <div className="cards">
         {ranking.candidates.map((c) => (

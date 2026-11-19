@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from 'react';
 import { MATURITY_SCALE } from '../framework/data/formats';
 import { REF } from '../framework/data/guide';
 import { INTENTS, INTENT_LABEL, INTENT_NOTES } from '../framework/data/intents';
@@ -10,9 +11,9 @@ import { Ref, Segmented, WeightPicker } from './common';
 const MiB = 1024 * 1024;
 
 /** Step 3: the intent mix first, the other refinements in a collapsed block. */
-export function Priorities({ state, onChange }: { state: AppState; onChange: (s: AppState) => void }) {
+export function Priorities({ state, onChange }: { state: AppState; onChange: Dispatch<SetStateAction<AppState>> }) {
   const custom = state.customTiers;
-  const setCustom = (tiers: Tier[]) => onChange(withTierPolicy(state, 'custom', tiers));
+  const setCustom = (tiers: Tier[]) => onChange((s) => withTierPolicy(s, 'custom', tiers));
 
   return (
     <div>
@@ -27,7 +28,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
             <WeightPicker
               label={`Weight of ${INTENT_LABEL[i]}`}
               value={state.intentWeights[i]}
-              onChange={(v) => onChange({ ...state, intentWeights: { ...state.intentWeights, [i]: v } })}
+              onChange={(v) => onChange((s) => ({ ...s, intentWeights: { ...s.intentWeights, [i]: v } }))}
             />
           </div>
         ))}
@@ -48,7 +49,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
               { value: 'on-the-fly', label: 'On the fly' },
               { value: 'batched', label: 'Batched' },
             ]}
-            onChange={(v) => onChange({ ...state, processingMode: v })}
+            onChange={(v) => onChange((s) => ({ ...s, processingMode: v }))}
           />
         </div>
         <span className="small muted">
@@ -63,7 +64,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
             label="Lowest maturity level you accept"
             value={state.minMaturity}
             options={([1, 2, 3, 4, 5] as MaturityLevel[]).map((l) => ({ value: l, label: `L${l}`, title: MATURITY_SCALE[l] }))}
-            onChange={(v) => onChange({ ...state, minMaturity: v })}
+            onChange={(v) => onChange((s) => ({ ...s, minMaturity: v }))}
           />
         </div>
         <span className="small muted">
@@ -83,7 +84,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
               { value: 'medium', label: 'Medium' },
               { value: 'high', label: 'High' },
             ]}
-            onChange={(v) => onChange({ ...state, encodingImportance: v })}
+            onChange={(v) => onChange((s) => ({ ...s, encodingImportance: v }))}
           />
         </div>
         <span className="small muted">
@@ -103,7 +104,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
               { value: 'cnes', label: 'CNES example' },
               { value: 'custom', label: 'Custom' },
             ]}
-            onChange={(v) => onChange(withTierPolicy(state, v))}
+            onChange={(v) => onChange((s) => withTierPolicy(s, v))}
           />
         </div>
         {state.tierPolicy.kind === 'cnes' && (
@@ -172,7 +173,7 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: (s:
 
 
 /** The weights of the measured criteria, in the measurements panel. */
-export function MeasuredWeights({ state, hasBenchmark, onChange }: { state: AppState; hasBenchmark: boolean; onChange: (s: AppState) => void }) {
+export function MeasuredWeights({ state, hasBenchmark, onChange }: { state: AppState; hasBenchmark: boolean; onChange: Dispatch<SetStateAction<AppState>> }) {
   return (
     <div>
       <div className="field">
@@ -189,7 +190,7 @@ export function MeasuredWeights({ state, hasBenchmark, onChange }: { state: AppS
             <WeightPicker
               label={`Weight of ${BENCHMARK_LABEL[c]}`}
               value={state.benchmarkWeights[c]}
-              onChange={(v) => onChange({ ...state, benchmarkWeights: { ...state.benchmarkWeights, [c]: v } })}
+              onChange={(v) => onChange((s) => ({ ...s, benchmarkWeights: { ...s.benchmarkWeights, [c]: v } }))}
             />
           </div>
         ))}

@@ -90,11 +90,19 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
   const family = FAMILIES[inputs.topology];
   const members = family.members;
 
-  // Which measured terms are active: on only when at least one candidate has data.
+  // Object size: an absolute tier fit, active when at least one candidate has a mean object size.
   const tiers = inputs.tierPolicy.tiers;
   const sizeActive = tiers.length > 0 && members.some((f) => isNum(measures[f]?.meanObjectBytes));
-  const benchActive = BENCHMARK_CRITERIA.filter(
-    (c) => inputs.benchmarkWeights[c] > 0 && members.some((f) => isNum(measures[f]?.[BENCH_SPEC[c].key])),
+  // Measured criteria are relative to the best candidate: a comparison needs two or more candidates with data.
+  const withData = (c: BenchmarkCriterion) => members.filter((f) => isNum(measures[f]?.[BENCH_SPEC[c].key]));
+  const benchActive = BENCHMARK_CRITERIA.filter((c) => inputs.benchmarkWeights[c] > 0 && withData(c).length >= 2);
+  const measureNotes = BENCHMARK_CRITERIA.filter((c) => inputs.benchmarkWeights[c] > 0 && withData(c).length < 2).map(
+    (c) => {
+      const only = withData(c);
+      return only.length === 1
+        ? `${BENCHMARK_LABEL[c]} is not in the score: only ${FORMATS[only[0]!].name} has data, and a comparison needs two or more formats.`
+        : `${BENCHMARK_LABEL[c]} is not in the score: no candidate of this family has data.`;
+    },
   );
   // Neutral value for a term that the guide does not rate: the mean of the rated members.
   const rated = (vals: (number | null)[]) => {
@@ -242,5 +250,5 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
   }
   if (inputs.intentWeights.visualization > 0 && INTENT_NOTES.visualization) notes.push(INTENT_NOTES.visualization);
 
-  return { candidates, close, notes };
+  return { candidates, close, notes, measureNotes };
 }

@@ -143,3 +143,26 @@ export function setWarnings(runs: ParsedRun[]): string[] {
   }
   return [];
 }
+
+/** Same run: same dataset, format, timestamp, scope, codecs and total size. */
+function runKey(r: ParsedRun): string {
+  return [r.datasetId, r.formatId, r.timestamp, r.scope ?? '', r.codecs.join('+'), r.profile?.totalBytes ?? ''].join('|');
+}
+
+/**
+ * Add uploaded runs to the current list. Each new run gets a unique id (many
+ * files have the same name, result.json). A run that is already in the list
+ * (same dataset, format, timestamp, scope, codecs and size) is replaced, not duplicated.
+ */
+export function mergeRuns(prev: ParsedRun[], incoming: ParsedRun[], uploadSeq: number): ParsedRun[] {
+  const fresh = incoming.map((r, i) => ({ ...r, id: `u${uploadSeq}-${i}` }));
+  const keys = new Set(fresh.map(runKey));
+  const seen = new Set<string>();
+  const unique = fresh.filter((r) => {
+    const k = runKey(r);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return [...prev.filter((r) => !keys.has(runKey(r))), ...unique];
+}

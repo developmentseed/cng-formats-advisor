@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { deriveRun, armsByFormat, runWarnings, selectedMeasurements, setWarnings } from '../src/framework/benchmark/criteria';
+import { deriveRun, armsByFormat, mergeRuns, runWarnings, selectedMeasurements, setWarnings } from '../src/framework/benchmark/criteria';
 import { parseBenchmarkText, type ParsedRun } from '../src/framework/benchmark/parse';
 import { CNES_TIERS } from '../src/framework/data/tiers';
 
@@ -89,6 +89,48 @@ describe('benchmark parser', () => {
     expect(rs.map((r) => r.ok)).toEqual([true, true]);
     const ids = rs.map((r) => (r.ok ? r.run.id : ''));
     expect(new Set(ids).size).toBe(2);
+  });
+
+  it('real runs are all named result.json: unique ids, and the same run replaces itself', () => {
+    const asResult = (name: string) => {
+      const [r] = parseBenchmarkText(fx(name), 'result.json');
+      if (!r || !r.ok) throw new Error('parse');
+      return r.run;
+    };
+    const a = asResult('cog-zstd.json');
+    const b = asResult('cog-deflate.json');
+    expect(a.id).toBe(b.id); // same file name: same parse id
+    let list = mergeRuns([], [a, b], 1);
+    expect(new Set(list.map((r) => r.id)).size).toBe(2);
+    list = mergeRuns(list, [asResult('geozarr.json')], 2);
+    expect(list).toHaveLength(3);
+    // The same run again (same dataset, format, timestamp, scope): replaced, not added.
+    list = mergeRuns(list, [asResult('geozarr.json')], 3);
+    expect(list).toHaveLength(3);
+    expect(new Set(list.map((r) => r.id)).size).toBe(3);
+  });
+
+  it('the compression ratio is weighted by size, not a plain mean of per-object ratios', () => {
+    const [r] = parseBenchmarkText(
+      JSON.stringify({
+        timestamp: 't', dataset_id: 'd', format_id: 'cog',
+        object_layouts: [
+          { kind: 'cog', name: 'band', size_bytes: 1000, codec: 'zstd', compression_ratio: 2 },
+          { kind: 'cog', name: 'mask', size_bytes: 10, codec: 'zstd', compression_ratio: 1000 },
+        ],
+      }),
+      'result.json',
+    );
+    // (1000*2 + 10*1000) / 1010 = 11.88, not (2 + 1000) / 2 = 501
+    expect(r!.ok && r!.run.compressionRatio).toBeCloseTo(11.88, 2);
+  });
+
+  it('the arm label tells arms apart without the file name', () => {
+    const [r] = parseBenchmarkText(
+      JSON.stringify({ timestamp: '2026-08-14T11:35:18Z', dataset_id: 'd', format_id: 'geozarr', params: { scope: 'rollup', product_count: 16, multiscale_levels: 0 }, object_layouts: [{ kind: 'geozarr', name: 'b', size_bytes: 1, codec: 'zstd' }] }),
+      'result.json',
+    );
+    expect(r!.ok && r!.run.armLabel).toBe('geozarr · zstd · no pyramid · roll-up of 16 · 2026-08-14 11:35');
   });
 
   it('an unknown format_id parses, with a warning', () => {

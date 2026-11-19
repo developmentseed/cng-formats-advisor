@@ -103,6 +103,15 @@ describe('Stage 2: score', () => {
     expect(t('cog', 'bench:display')).toBeUndefined();
   });
 
+  it('a measured criterion with data for only one candidate is not in the score, with a note', () => {
+    const r = rank(inputs({ topology: 'raster-2d', benchmarkWeights: { storage: 0, read: 0, display: 2, write: 0 } }), {
+      geozarr: { displayLatency: 0.259 },
+      cog: { totalBytes: 100 },
+    })!;
+    expect(r.candidates.every((c) => !c.terms.some((t) => t.kind === 'bench:display'))).toBe(true);
+    expect(r.measureNotes.join(' ')).toMatch(/only GeoZarr \(Zarr v3\) has data/);
+  });
+
   it('flags close scores', () => {
     const r = rank(inputs({ topology: 'point-cloud', intentWeights: { archive: 1, processing: 1, visualization: 1, distribution: 1, fusion: 1 } }))!;
     expect(typeof r.close).toBe('boolean');

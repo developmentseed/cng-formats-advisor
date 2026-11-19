@@ -65,7 +65,11 @@ export interface ParsedRun {
   metrics: Metric[];
   layoutKinds: string[];
   codecs: string[];
-  /** Mean of the positive compression ratios of the layouts. */
+  /**
+   * Compression ratio of the whole run: bytes before compression / stored bytes,
+   * over the layouts that report a ratio. A plain mean of the per-object ratios
+   * is wrong: a few tiny, very compressible objects (masks) dominate it.
+   */
   compressionRatio?: number;
   conditions: ConditionSummary[];
   flags: RunFlags;
@@ -176,7 +180,9 @@ function parseOne(v: unknown, fileName: string, index: number, total: number): P
   req(layouts.length === (layoutsRaw as unknown[]).length, null, 'Each item of "object_layouts" must be an object.');
 
   const codecs = [...new Set(layouts.map((l) => l.codec).filter((c): c is string => typeof c === 'string'))];
-  const ratios = layouts.map((l) => l.compression_ratio).filter((r): r is number => num(r) && r > 0);
+  const rated = layouts.filter((l) => num(l.compression_ratio) && l.compression_ratio > 0 && num(l.size_bytes) && l.size_bytes > 0);
+  const storedBytes = rated.reduce((a, l) => a + (l.size_bytes as number), 0);
+  const rawBytes = rated.reduce((a, l) => a + (l.size_bytes as number) * (l.compression_ratio as number), 0);
   const names = new Set(metrics.map((m) => m.name));
   const flags: RunFlags = {
     contentSubset: layouts.some((l) => l.content_subset === true),
@@ -188,7 +194,7 @@ function parseOne(v: unknown, fileName: string, index: number, total: number): P
   };
   const scope = typeof params.scope === 'string' ? params.scope : undefined;
   const candidate = formatFromBenchmarkId(formatId);
-  const armParts = [formatId, codecs.length ? codecs.join('+') : null, scope === 'rollup' ? 'roll-up' : null, fileName + (total > 1 ? ` #${index + 1}` : '')];
+  const armLabel = buildArmLabel({ formatId, codecs, params, scope, timestamp, fileName, index, total });
 
   return {
     id: `${fileName}#${index}`,
@@ -202,11 +208,42 @@ function parseOne(v: unknown, fileName: string, index: number, total: number): P
     metrics,
     layoutKinds: [...new Set(layouts.map((l) => l.kind).filter((k): k is string => typeof k === 'string'))],
     codecs,
-    ...(ratios.length ? { compressionRatio: ratios.reduce((a, b) => a + b, 0) / ratios.length } : {}),
+    ...(storedBytes > 0 ? { compressionRatio: rawBytes / storedBytes } : {}),
     conditions: parseConditions(o.conditions),
     flags,
-    armLabel: armParts.filter(Boolean).join(' · '),
+    armLabel,
   };
+}
+
+/**
+ * A label that tells two arms apart without the file name: real runs are all
+ * named result.json. Example: "geozarr · zstd · no pyramid · roll-up of 16 · 2026-08-14 11:35".
+ */
+function buildArmLabel(a: {
+  formatId: string;
+  codecs: string[];
+  params: Obj;
+  scope?: string;
+  timestamp: string;
+  fileName: string;
+  index: number;
+  total: number;
+}): string {
+  const parts: string[] = [a.formatId];
+  if (a.codecs.length) parts.push(a.codecs.join('+'));
+  const ml = a.params.multiscale_levels;
+  if (ml === 0) parts.push('no pyramid');
+  else if (ml !== undefined && ml !== null) parts.push('pyramid');
+  if (a.scope === 'rollup') {
+    const n = a.params.product_count;
+    parts.push(num(n) ? `roll-up of ${n}` : 'roll-up');
+  }
+  const t = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(a.timestamp);
+  parts.push(t ? `${t[1]} ${t[2]}` : a.timestamp);
+  const base = a.fileName.split('/').pop() ?? a.fileName;
+  if (base !== 'result.json') parts.push(base);
+  if (a.total > 1) parts.push(`#${a.index + 1}`);
+  return parts.join(' · ');
 }
 
 /** Parse the text of one file. A file can hold one run or a list of runs. */

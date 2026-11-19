@@ -55,6 +55,13 @@ the tests with a checkout of the guide:
 CNG_GUIDE_DIR=../cloud-optimized-geospatial-formats-guide npm test
 ```
 
+To check the parser against real benchmark output, point the tests at a folder
+of `result.json` files:
+
+```sh
+CNG_RUNS_DIR=../cnes-cng-study/deliverables/D3-benchmarks/testbed/runs npm test
+```
+
 ## Development
 
 Requires Node.js 22.12 or later.

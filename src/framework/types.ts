@@ -163,4 +163,6 @@ export interface Ranking {
   /** True when the two first scores are within the "close" margin. */
   close: boolean;
   notes: string[];
+  /** Why a measured criterion with a weight is not in the score. */
+  measureNotes: string[];
 }

@@ -145,8 +145,8 @@ export const OBJECT_SIZE_TERM = {
 
 export const BENCHMARK_TERMS = {
   rule: c(
-    'value = best / this (lower is better) or this / best (higher is better)',
-    '"When two or three candidates remain and the choice is close, a transparent score can make the trade-off explicit." Each measured value is relative to the best candidate.',
+    'value = best / this (lower is better) or this / best (higher is better); active only with data for two or more candidates',
+    '"When two or three candidates remain and the choice is close, a transparent score can make the trade-off explicit." Each measured value is relative to the best candidate, so a criterion needs data for two or more candidates.',
     REF.quantitative,
   ),
   defaultWeight: c(0, 'Off by default: you turn a criterion on when you have measurements.', REF.quantitative),
