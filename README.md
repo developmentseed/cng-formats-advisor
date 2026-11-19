@@ -17,8 +17,9 @@ with a live short list beside the questions:
 3. **Priorities** (Stage 2: refinements). The intent mix first, the other
    refinements in a collapsed block.
 4. **Result.** A transparent weighted score ranks the members: intent mix, ecosystem
-   maturity, interpretation encoding and, with benchmark data, object size and
-   measured performance. Each term shows its weight, its value and a link to the
+   maturity, interpretation encoding and, with benchmark data, measured storage
+   volume and performance. Object size and tier fit are reported on each card,
+   not scored: a storage policy is a property of your infrastructure. Each term shows its weight, its value and a link to the
    guide.
 
 The dashboard helps. You make the final call. No format is removed by one answer.

@@ -70,21 +70,23 @@ describe('Stage 2: score', () => {
     expect(r.candidates).toHaveLength(3);
   });
 
-  it('object size: no term without benchmark data', () => {
-    const r = rank(inputs({ topology: 'raster-2d', tierPolicy: CNES_TIER_POLICY }))!;
-    expect(r.candidates[0]!.terms.some((t) => t.kind === 'object-size')).toBe(false);
-  });
-
-  it('object size: tier fit from the mean object size, left out where there is no data', () => {
+  it('object size and tier fit are reported, never scored', () => {
+    const scoreOf = (m: Parameters<typeof rank>[1]) =>
+      rank(inputs({ topology: 'raster-2d', tierPolicy: CNES_TIER_POLICY }), m)!.candidates.map((c) => [c.format, c.score]);
+    const without = scoreOf({});
     const r = rank(inputs({ topology: 'raster-2d', tierPolicy: CNES_TIER_POLICY }), {
       cog: { meanObjectBytes: 57 * MiB },
       geozarr: { meanObjectBytes: 10.4 * MiB },
     })!;
-    const term = (f: string) => r.candidates.find((c) => c.format === f)!.terms.find((t) => t.kind === 'object-size')!;
-    expect(term('cog').value).toBe(0.5);
-    expect(term('geozarr').value).toBe(0);
-    expect(term('pmtiles').value).toBeNull();
-    expect(r.candidates.find((c) => c.format === 'geozarr')!.warnings.some((w) => w.kind === 'tier')).toBe(true);
+    // The same scores with and without object sizes.
+    expect(r.candidates.map((c) => [c.format, c.score])).toEqual(without);
+    expect(r.candidates.some((c) => c.terms.some((t) => (t.kind as string) === 'object-size'))).toBe(false);
+    const tierNote = (f: string) => r.candidates.find((c) => c.format === f)!.warnings.find((w) => w.kind === 'tier');
+    expect(tierNote('cog')!.info).toBe(true);
+    expect(tierNote('cog')!.text).toMatch(/reported, not scored.*clears warm/);
+    expect(tierNote('geozarr')!.info).toBeUndefined();
+    expect(tierNote('geozarr')!.text).toMatch(/clears no tier/);
+    expect(tierNote('pmtiles')).toBeUndefined();
   });
 
   it('benchmark criteria: off by default, relative to the best when on', () => {

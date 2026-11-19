@@ -5,13 +5,12 @@ import { BENCHMARK_DOCS_URL, REF } from '../framework/data/guide';
 import type { RankedCandidate, Ranking, ScoreTerm, Topology } from '../framework/types';
 import { Ref, WarningList } from './common';
 
-type Group = 'intent' | 'maturity' | 'encoding' | 'size' | 'measured';
+type Group = 'intent' | 'maturity' | 'encoding' | 'measured';
 
 export const GROUP_LABEL: Record<Group, string> = {
   intent: 'Intent and family fit',
   maturity: 'Maturity',
   encoding: 'Encoding',
-  size: 'Object size',
   measured: 'Measured',
 };
 
@@ -19,7 +18,6 @@ function groupOf(t: ScoreTerm): Group {
   if (t.kind.startsWith('intent:') || t.kind === 'family-fit') return 'intent';
   if (t.kind === 'maturity') return 'maturity';
   if (t.kind === 'encoding') return 'encoding';
-  if (t.kind === 'object-size') return 'size';
   return 'measured';
 }
 
@@ -162,7 +160,7 @@ function Card({ c, topology }: { c: RankedCandidate; topology: Topology }) {
           <Ref to={f.page}>{f.page.label}</Ref>
         </dd>
       </dl>
-      <WarningList items={c.warnings} />
+      <WarningList items={c.warnings.map((w) => ({ text: w.text, ref: w.ref, info: w.info }))} />
       <Breakdown c={c} />
     </article>
   );
@@ -170,7 +168,7 @@ function Card({ c, topology }: { c: RankedCandidate; topology: Topology }) {
 
 export function Results({ ranking, topology }: { ranking: Ranking; topology: Topology }) {
   const groups = [...new Set(ranking.candidates.flatMap((c) => c.terms.filter((t) => t.points > 0.05).map(groupOf)))];
-  const order: Group[] = ['intent', 'maturity', 'encoding', 'size', 'measured'];
+  const order: Group[] = ['intent', 'maturity', 'encoding', 'measured'];
   return (
     <section className="panel" aria-labelledby="results-h">
       <h2 id="results-h">Ranked candidates</h2>

@@ -11,7 +11,7 @@ import {
   INTENT_FIT,
   INTENT_TERM_RULE,
   MATURITY_TERM,
-  OBJECT_SIZE_TERM,
+  TIER_FIT_REPORT,
   type Fit,
 } from '../framework/data/judgements';
 import type { Cited, FormatId } from '../framework/types';
@@ -198,8 +198,7 @@ export function Method() {
             <CitedRow name="Encoding value, first-class" c={ENCODING_TERM.value['first-class']} />
             <CitedRow name="Encoding value, CRS only" c={ENCODING_TERM.value['crs-only']} />
             <CitedRow name="Encoding not rated" c={ENCODING_TERM.notRated} />
-            <CitedRow name="Object-size weight" c={OBJECT_SIZE_TERM.weight} />
-            <CitedRow name="Object-size value" c={OBJECT_SIZE_TERM.rule} />
+            <CitedRow name="Object size and tier fit" c={TIER_FIT_REPORT} />
             <CitedRow name="Measured criteria" c={BENCHMARK_TERMS.rule} />
             <CitedRow name="Measured criteria, default weight" c={BENCHMARK_TERMS.defaultWeight} />
             <CitedRow name="Close margin (points)" c={CLOSE_MARGIN} />

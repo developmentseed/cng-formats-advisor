@@ -161,7 +161,8 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: Dis
           </div>
         )}
         <span className="small muted">
-          Without benchmark data, the object size gives advice only (the grouping lever), not a score.{' '}
+          Object size is reported, not scored: a storage policy is a property of your infrastructure, not of the
+          format. With benchmark data, each card shows which tier the mean object size clears.{' '}
           <Ref to={REF.groupingLever} />
         </span>
       </div>

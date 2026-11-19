@@ -18,7 +18,6 @@ import {
   ENCODING_TERM,
   INTENT_FIT,
   MATURITY_TERM,
-  OBJECT_SIZE_TERM,
 } from './data/judgements';
 import { tierFit } from './data/tiers';
 import type {
@@ -91,9 +90,7 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
   const family = FAMILIES[inputs.topology];
   const members = family.members;
 
-  // Object size: an absolute tier fit, active when at least one candidate has a mean object size.
   const tiers = inputs.tierPolicy.tiers;
-  const sizeActive = tiers.length > 0 && members.some((f) => isNum(measures[f]?.meanObjectBytes));
   // Measured criteria are relative to the best candidate: a comparison needs two or more candidates with data.
   const withData = (c: BenchmarkCriterion) => members.filter((f) => isNum(measures[f]?.[BENCH_SPEC[c].key]));
   const benchActive = BENCHMARK_CRITERIA.filter((c) => inputs.benchmarkWeights[c] > 0 && withData(c).length >= 2);
@@ -207,25 +204,26 @@ export function rank(inputs: ScoreInputs, measures: Measures = {}): Ranking | nu
       });
     }
 
-    if (sizeActive) {
-      const mean = m.meanObjectBytes;
-      let value: number | null = null;
-      let explanation = 'No benchmark data for this format. Left out of the mean.';
-      if (isNum(mean)) {
-        const fit = tierFit(mean, tiers);
-        value = fit.length / tiers.length;
-        explanation = `Mean object size ${formatBytes(mean)} clears ${fit.length ? fit.join(', ') : 'no tier'} (${fit.length} of ${tiers.length}).`;
-        if (fit.length === 0) {
-          warnings.push({
-            kind: 'tier',
-            text: `Mean object size ${formatBytes(mean)} clears no tier of your policy. Use the grouping lever: ${info.groupingLever ?? 'see the format page'}.`,
-            ref: REF.groupingLever,
-          });
-        }
-      } else {
-        warnings.push({ kind: 'no-data', text: 'Object size: no benchmark data.', ref: REF.quantitative });
-      }
-      terms.push({ kind: 'object-size', label: 'Object size (tier fit)', weight: OBJECT_SIZE_TERM.weight.value, value, explanation, ref: REF.groupingLever });
+    // Object size and tier fit: reported, not scored. A storage policy is a
+    // property of your infrastructure, not of the format: it changes the
+    // grouping, not the choice of format.
+    const mean = m.meanObjectBytes;
+    if (tiers.length > 0 && isNum(mean)) {
+      const fit = tierFit(mean, tiers);
+      warnings.push(
+        fit.length
+          ? {
+              kind: 'tier',
+              info: true,
+              text: `Object size (reported, not scored): mean ${formatBytes(mean)} clears ${fit.join(', ')}.`,
+              ref: REF.groupingLever,
+            }
+          : {
+              kind: 'tier',
+              text: `Object size (reported, not scored): mean ${formatBytes(mean)} clears no tier of your policy. Tune the grouping lever: ${info.groupingLever ?? 'see the format page'}.`,
+              ref: REF.groupingLever,
+            },
+      );
     }
 
     for (const c of benchActive) {

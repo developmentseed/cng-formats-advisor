@@ -14,8 +14,8 @@
   --link: #1c5cab;
   --focus: #2a78d6;
   --track: #e6e5e1;
-  /* Score bar groups, in bar order: intent and family fit, maturity, encoding,
-     object size, measured. Every pair that can touch passes the CVD and
+  /* Score bar groups, in bar order: intent and family fit (1), maturity (2),
+     encoding (3), measured (5). Slot 4 is not in the bar. Every pair that can touch passes the CVD and
      normal-vision checks in both themes (dataviz validate_palette.js). */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -1072,9 +1072,6 @@ details[open] > summary {
 }
 .g-encoding {
   background: var(--series-3);
-}
-.g-size {
-  background: var(--series-4);
 }
 .g-measured {
   background: var(--series-5);

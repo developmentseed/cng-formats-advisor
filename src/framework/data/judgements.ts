@@ -146,15 +146,12 @@ export const ENCODING_TERM = {
   ),
 };
 
-export const OBJECT_SIZE_TERM = {
-  weight: c(2, 'One of the four refinements: "the object-size and grouping lever". Applies only with benchmark data and a tier policy.', REF.groupingLever),
-  /** Value = number of tiers that the mean object size clears / number of tiers. */
-  rule: c(
-    'value = tiers cleared / tiers in the policy',
-    'Tier fit from the mean object size, the same rule as cng-formats-benchmark: "Object stores degrade when they must index very many tiny objects, so most reward a larger average object."',
-    REF.groupingLever,
-  ),
-};
+/** Object size and tier fit: reported on each card, never scored. */
+export const TIER_FIT_REPORT = c(
+  'reported, not scored',
+  'A storage policy is a property of your infrastructure, not of the format. The guide uses it to tune the grouping, not to pick the format: "find out whether your storage has an object-size policy, and adjust your groupings accordingly."',
+  REF.groupingLever,
+);
 
 export const BENCHMARK_TERMS = {
   rule: c(

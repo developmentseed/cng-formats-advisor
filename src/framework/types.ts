@@ -132,7 +132,6 @@ export type TermKind =
   | 'family-fit'
   | 'maturity'
   | 'encoding'
-  | 'object-size'
   | `bench:${BenchmarkCriterion}`;
 
 export interface ScoreTerm {
@@ -148,6 +147,8 @@ export interface ScoreTerm {
 }
 
 export interface Warning {
+  /** Information, not a warning: shown with an "i" icon. */
+  info?: boolean;
   kind: 'maturity' | 'maturity-not-rated' | 'encoding' | 'tier' | 'no-data' | 'low-fit';
   text: string;
   ref?: GuideRef;
