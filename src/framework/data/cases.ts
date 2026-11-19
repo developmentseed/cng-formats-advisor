@@ -1,5 +1,5 @@
 /**
- * The presets: the six case studies of the guide, plus two presets that are
+ * The presets: five case studies of the guide (case 5 is left out), plus presets that are
  * not in the guide. Text and numbers here are copied from case-studies.qmd.
  * No number here is computed or added: if the guide does not give it, it is not here.
  *
@@ -46,10 +46,17 @@ export interface CasePreset {
   measurements: PublishedArm[];
   /** "Where it lands", as the guide writes it. */
   outcome: string;
+  /** Short form: the "Lands on" column of the guide summary table, or our text when not in the guide. */
+  landsOn: string;
   /** Cautions of the guide for this case. */
   cautions: string[];
   /** For the tests: the formats the guide puts first. */
   expectedTop: FormatId[];
+  /**
+   * Set when the case has no single winner: the result depends on an input
+   * that the person must weigh. The text says which input.
+   */
+  edgeCase?: string;
 }
 
 const BLANK: ControlAnswers = {
@@ -116,6 +123,7 @@ export const CASES: CasePreset[] = [
         notes: ['Source .zip: 2023.7 MiB. The COG is about 30 % larger, mostly because of the overviews.'],
       },
     ],
+    landsOn: 'COG per scene',
     outcome: 'COG per scene for distribution and visualization.',
     cautions: [
       'For temporal analysis GeoZarr is the right target, but the GeoZarr store measured here does not yet deliver it: it is a per-scene, two-dimensional store.',
@@ -175,12 +183,15 @@ export const CASES: CasePreset[] = [
         notes: ['Source .zip: 496 MiB. The COG is about 47 % larger.'],
       },
     ],
+    landsOn: 'COG to serve, GeoZarr to analyse',
     outcome:
       'COG for the serving path, because it keeps both the tier and the display speed. GeoZarr for the analysis path, once the cube is built and measured.',
     cautions: [
       'The cube itself is not measured. Every GeoZarr figure describes a per-scene, two-dimensional store. Read the case as an argument for the cube, and the numbers as evidence about the per-scene shape only.',
     ],
     expectedTop: ['cog', 'geozarr'],
+    edgeCase:
+      'The guide lands on two formats: COG for the serving path, GeoZarr for the analysis path. The ranking depends on the path that you weigh more. Try the follow-up question in step 2: "Analysis across the cube" puts GeoZarr first by a small margin; "Slices are read alone" puts COG first.',
   },
   {
     id: 'case3',
@@ -213,6 +224,7 @@ export const CASES: CasePreset[] = [
         totalSize: { value: 3621.4, unit: 'MiB' },
       },
     ],
+    landsOn: 'COPC',
     outcome:
       'COPC. The cloud-optimized value is partial access and level of detail at size parity, not a size saving. GeoParquet is the alternative where columnar analytics dominate.',
     cautions: [
@@ -264,6 +276,7 @@ export const CASES: CasePreset[] = [
         ],
       },
     ],
+    landsOn: 'GeoParquet, aggregated',
     outcome:
       'GeoParquet, with pass-level aggregation. It wins on size, on download, and on fusion. FlatGeobuf is the measured alternative where whole-row spatial subsetting dominates.',
     cautions: [
@@ -271,46 +284,6 @@ export const CASES: CasePreset[] = [
       'FlatGeobuf could not hold the product as delivered: its R-tree cannot index a NULL geometry.',
     ],
     expectedTop: ['geoparquet'],
-  },
-  {
-    id: 'case5',
-    title: 'Case 5: small N-D grid',
-    product: 'SWOT L2_HR Raster',
-    sourceFormat: 'geoTiff',
-    inGuide: true,
-    ref: REF.case5,
-    answers: REPROCESS,
-    tierPolicy: 'cnes',
-    measurements: [
-      {
-        label: 'COG, one object for each variable',
-        format: 'cog',
-        unit: '12 granules, all 38 CF variables',
-        totalSize: { value: 1107.8, unit: 'MiB' },
-        objectCount: 456,
-        meanObjectSize: { value: 2.55, unit: 'MiB' },
-        tierAsPublished: 'none',
-        notes: ['The smallest COG object is 19 KB.'],
-      },
-      {
-        label: 'GeoZarr, one store for each variable',
-        format: 'geozarr',
-        unit: '12 granules, all 38 CF variables',
-        totalSize: { value: 1214.8, unit: 'MiB' },
-        objectCount: 2640,
-        meanObjectSize: { value: 471, unit: 'KiB' },
-        tierAsPublished: 'none',
-        notes: ['The shard (2048 px) was wider than the grid (about 1457 px), so the sharding lever grouped nothing.'],
-      },
-    ],
-    outcome:
-      'COG for the small raster, plus aggregation across variables and granules. GeoZarr is the alternative to compare once the shard is sized against this grid.',
-    cautions: [
-      'The content-subset trap: a COG of the water-surface-elevation variable alone is 4.3 MiB, against about 67 MiB for the whole granule. The apparent 92 % saving is dropped content.',
-      'Aggregation is sized, not measured. Treat every aggregation figure as arithmetic, never as a measurement.',
-      'The intent mix is provisional and still to be confirmed with the product owner.',
-    ],
-    expectedTop: ['cog'],
   },
   {
     id: 'case6',
@@ -330,6 +303,7 @@ export const CASES: CasePreset[] = [
     },
     tierPolicy: 'none',
     measurements: [],
+    landsOn: 'Virtual Zarr',
     outcome: 'Virtual Zarr. Range access with no reprocessing.',
     cautions: [
       'This case has no benchmark.',
@@ -339,36 +313,31 @@ export const CASES: CasePreset[] = [
     expectedTop: [],
   },
   {
-    id: 's2-time-cube',
-    title: 'Sentinel-2 L2A time-series cube',
-    product: 'Sentinel-2 L2A scenes stacked over time, for time-series analysis',
-    sourceFormat: 'geoTiff in a .zip',
+    id: 'duacs-sea-level',
+    title: 'DUACS gridded sea level',
+    product: 'DUACS L4 gridded sea level anomaly (CNES/CLS, distributed by Copernicus Marine)',
+    sourceFormat: 'CF netCDF, one file per day',
     inGuide: false,
-    ref: REF.case1,
-    answers: REPROCESS,
-    tierPolicy: 'cnes',
+    ref: REF.topology,
+    answers: {
+      ...BLANK,
+      existingData: true,
+      canReprocess: false,
+      canRepackage: true,
+      existingUsers: true,
+    },
+    tierPolicy: 'none',
     measurements: [],
+    landsOn: 'GeoZarr, from the guide text (not measured)',
     outcome:
-      'Not a case of the guide. The guide text points to GeoZarr for this use: "For temporal analysis GeoZarr is the right target" (case 1), "GeoZarr for the analysis path, once the cube is built and measured" (case 2).',
+      'Not a case of the guide, and not measured. The guide text points to GeoZarr for this use: "GeoZarr for analysis across the cube" (topology table), and an L2 candidate "can still be the right answer" for multidimensional cubes.',
     cautions: [
-      'The cube itself is not measured. Every GeoZarr figure in the guide describes a per-scene, two-dimensional store.',
-      'The temporal benefit appears only once many scenes are concatenated along time into a single cube. It is a collection-level layout decision.',
+      'This example is not a case study of the guide. Its inputs are assumptions. Review them for your product.',
+      'The CF packing (scale_factor, add_offset, _FillValue) must become array properties of the Zarr store: the scale_offset codec and a declared fill value. Otherwise the encoding advantage is lost.',
+      'Chunk shape decides which access stays cheap. A cube chunked long in time serves a time series at one point cheaply and a full map expensively; chunked wide in y and x it does the opposite.',
       'GeoZarr is L2: plan for change. Budget for convention churn, and pin the versions you depend on.',
-      'This preset is not a case study of the guide. Its intent mix is an assumption. Review it for your product.',
     ],
     expectedTop: ['geozarr'],
-  },
-  {
-    id: 's2-l2b-snow',
-    title: 'Sentinel-2 L2B snow',
-    product: 'Sentinel-2 L2B snow cover',
-    inGuide: false,
-    answers: REPROCESS,
-    tierPolicy: 'cnes',
-    measurements: [],
-    outcome: 'Not in the guide. No published outcome.',
-    cautions: ['This preset is not a case study of the guide. Its inputs are assumptions. Review them for your product.'],
-    expectedTop: [],
   },
   {
     id: 'new-product',
@@ -378,6 +347,7 @@ export const CASES: CasePreset[] = [
     answers: { ...BLANK, existingData: false, mandate: false },
     tierPolicy: 'none',
     measurements: [],
+    landsOn: 'your answers',
     outcome: 'Not in the guide. Answer the questions for your product.',
     cautions: [],
     expectedTop: [],

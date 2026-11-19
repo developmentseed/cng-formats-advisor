@@ -822,6 +822,12 @@ input[type='text'] {
   overflow: hidden;
 }
 
+.badge.badge-edge {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+}
+
 .badge {
   display: inline-block;
   justify-self: start;

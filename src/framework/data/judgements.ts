@@ -210,10 +210,8 @@ export type CasePresetId =
   | 'case2'
   | 'case3'
   | 'case4'
-  | 'case5'
   | 'case6'
-  | 's2-time-cube'
-  | 's2-l2b-snow'
+  | 'duacs-sea-level'
   | 'new-product';
 
 export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
@@ -249,14 +247,6 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
     minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
     encodingImportance: c('high', 'Fusion is in the mix: fusion "weights interpretation encoding ... far higher than single-product analysis does".', REF.intent),
   },
-  case5: {
-    topology: c('nd-cube', '"N-D grid, which opens {GeoZarr, COG}".', REF.case5),
-    familyFocus: c(null, 'The case does not state an access pattern. Not sure.', REF.case5),
-    intentWeights: c(W(3, 0, 1, 3, 2), '"Distribution and download, with data fusion against the other SWOT products, and some visualization." The guide says this mix "is provisional".', REF.case5),
-    processingMode: c('batched', 'No processing intent. Aggregation above the product.', REF.case5),
-    minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
-    encodingImportance: c('high', 'Fusion is in the mix: fusion "weights interpretation encoding ... far higher than single-product analysis does".', REF.intent),
-  },
   case6: {
     topology: c(null, 'Case 6 "does not reach the topology question at all".', REF.case6),
     familyFocus: c(null, 'Not used: no Stage 2.', REF.case6),
@@ -265,21 +255,13 @@ export const PRESET_INPUTS: Record<CasePresetId, PresetInputs> = {
     minMaturity: c(3, 'Not used: no Stage 2.', REF.case6),
     encodingImportance: c('medium', 'Not used: no Stage 2.', REF.case6),
   },
-  's2-time-cube': {
-    topology: c('nd-cube', 'NOT IN THE GUIDE as a case. Case 2: "a year of RTC over a region is naturally a time × y × x × pol cube"; case 1: "many scenes are concatenated along time into a single cube".', REF.case2),
-    familyFocus: c('across', 'Case 1: "For temporal analysis GeoZarr is the right target"; case 2: "on a Zarr cube a time-series slice or an area-of-interest subset is one range-addressable query".', REF.case1),
-    intentWeights: c(W(0, 3, 1, 1, 0), 'NOT IN THE GUIDE. Assumption: time-series analysis leads ("the analysis path" of case 2); some visualization and distribution.', REF.case2),
-    processingMode: c('batched', 'NOT IN THE GUIDE. Assumption: time-series analysis over a region is a bulk scan.', REF.intent),
+  'duacs-sea-level': {
+    topology: c('nd-cube', 'NOT IN THE GUIDE as a case. A daily grid over many years, time × lat × lon: "N-D cubes, for example time × y × x × band".', REF.topology),
+    familyFocus: c('across', 'NOT IN THE GUIDE. Assumption: the main use is sea-level trends at a point and averages over an area and a period. Topology table: "GeoZarr for analysis across the cube".', REF.topology),
+    intentWeights: c(W(0, 3, 1, 2, 2), 'NOT IN THE GUIDE. Assumption: analysis leads; fusion with other ocean products and in-situ data; distribution; some visualization.', REF.intent),
+    processingMode: c('batched', 'NOT IN THE GUIDE. Assumption: trends over decades are bulk scans.', REF.intent),
     minMaturity: c(2, '"An L2 candidate can still be the right answer. Multidimensional cubes have no mature format candidate." The producer accepts to "plan for change".', REF.maturityWarning),
-    encodingImportance: c('high', 'Case 1: "The source reflectance is stored as scaled integers, and the nodata fill is left undeclared."', REF.case1),
-  },
-  's2-l2b-snow': {
-    topology: c('raster-2d', 'NOT IN THE GUIDE. Assumption: a per-tile 2D raster product.', REF.topology),
-    familyFocus: c(null, 'NOT IN THE GUIDE. Not sure.', REF.topology),
-    intentWeights: c(W(1, 2, 2, 3, 0), 'NOT IN THE GUIDE. Assumption: distribution first, then visualization and time-series processing of snow cover, some download.', REF.intent),
-    processingMode: c('batched', 'NOT IN THE GUIDE. Assumption: snow-cover time series over a season are batch jobs.', REF.intent),
-    minMaturity: c(3, MIN_MATURITY_ASSUMPTION, REF.maturity),
-    encodingImportance: c('medium', 'NOT IN THE GUIDE. Assumption: default importance.', REF.encoding),
+    encodingImportance: c('high', '"If your product stores scaled integers, or if an undeclared fill value would change a computed result, weigh this aspect heavily." CF packing stores scaled integers with scale_factor, add_offset and _FillValue.', REF.encoding),
   },
   'new-product': {
     topology: c(null, 'NOT IN THE GUIDE. You answer "what shape are the data?".', REF.topology),

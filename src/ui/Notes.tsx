@@ -42,7 +42,7 @@ export function PresetOutcome({ preset, modified }: { preset: CasePreset; modifi
     <section className="panel" aria-labelledby="preset-out-h">
       <h2 id="preset-out-h">
         {preset.inGuide ? 'Where it lands in the guide' : 'About this preset'}
-        {!preset.inGuide && <span className="badge">Not in the guide</span>}
+        {preset.edgeCase && <span className="badge badge-edge">Edge case</span>}
       </h2>
       <p className="small muted">
         {preset.title} · {preset.product}
@@ -51,6 +51,11 @@ export function PresetOutcome({ preset, modified }: { preset: CasePreset; modifi
       <p>
         <strong>{preset.outcome}</strong>
       </p>
+      {preset.edgeCase && (
+        <div className="callout" style={{ marginBottom: 8 }}>
+          <strong>Edge case.</strong> {preset.edgeCase}
+        </div>
+      )}
       {modified && preset.inGuide && (
         <p className="small muted">You changed some inputs, so the ranking can differ from the guide.</p>
       )}

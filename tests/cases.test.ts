@@ -47,13 +47,6 @@ describe('guide case studies', () => {
     expect(order[1]).toBe('flatgeobuf');
   });
 
-  it('case 5, SWOT Raster: COG first', () => {
-    const { control, order } = run('case5');
-    expect(control.kind).toBe('free');
-    expect(order[0]).toBe('cog');
-    expect(order[1]).toBe('geozarr');
-  });
-
   it('case 6, frozen archive: Virtual Zarr, no Stage 2', () => {
     const { control, ranking } = run('case6');
     expect(control.kind).toBe('virtual');
@@ -61,15 +54,26 @@ describe('guide case studies', () => {
     expect(ranking).toBeNull();
   });
 
-  it('Sentinel-2 time-series cube (not in the guide): GeoZarr first, with a clear margin', () => {
-    const { control, order, ranking } = run('s2-time-cube');
-    expect(control.kind).toBe('free');
+  it('DUACS sea level (not in the guide): repackage, then GeoZarr first with a clear margin', () => {
+    const { control, order, ranking } = run('duacs-sea-level');
+    expect(control.kind).toBe('repackage');
+    expect(control.continuesToStage2).toBe(true);
+    expect(control.notes.join(' ')).toMatch(/alongside/); // existing users and tools
     expect(order[0]).toBe('geozarr');
     expect(ranking!.close).toBe(false);
     // Still first with the stricter maturity limit L3: the result does not hang on one value.
-    const strict = rank({ ...presetState('s2-time-cube'), minMaturity: 3 })!;
+    const strict = rank({ ...presetState('duacs-sea-level'), minMaturity: 3 })!;
     expect(strict.candidates[0]!.format).toBe('geozarr');
-    expect(strict.close).toBe(false);
+  });
+
+  it('case 2 is an edge case: the follow-up answer alone flips COG and GeoZarr', () => {
+    expect(getCase('case2')!.edgeCase).toBeTruthy();
+    const across = rank({ ...presetState('case2'), familyFocus: 'across' })!;
+    const slices = rank({ ...presetState('case2'), familyFocus: 'slices' })!;
+    expect(across.candidates[0]!.format).toBe('geozarr');
+    expect(across.close).toBe(true);
+    expect(slices.candidates[0]!.format).toBe('cog');
+    expect(getCase('case1')!.edgeCase).toBeUndefined();
   });
 
   it('each guide case matches its expectedTop data', () => {
@@ -80,14 +84,15 @@ describe('guide case studies', () => {
   });
 
   it('the presets that are not in the guide carry the label', () => {
-    expect(getCase('s2-l2b-snow')!.inGuide).toBe(false);
-    expect(getCase('s2-time-cube')!.inGuide).toBe(false);
+    expect(getCase('s2-l2b-snow')).toBeUndefined();
+    expect(getCase('duacs-sea-level')!.inGuide).toBe(false);
+    expect(getCase('case5')).toBeUndefined();
     expect(getCase('new-product')!.inGuide).toBe(false);
-    expect(CASES.filter((c) => c.inGuide)).toHaveLength(6);
+    expect(CASES.filter((c) => c.inGuide)).toHaveLength(5);
   });
 
-  it('cases 1 to 5 carry published measurements, case 6 has none', () => {
-    for (const id of ['case1', 'case2', 'case3', 'case4', 'case5'] as const) {
+  it('cases 1 to 4 carry published measurements, case 6 has none', () => {
+    for (const id of ['case1', 'case2', 'case3', 'case4'] as const) {
       expect(getCase(id)!.measurements.length).toBeGreaterThan(0);
     }
     expect(getCase('case6')!.measurements).toHaveLength(0);

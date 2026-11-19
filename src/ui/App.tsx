@@ -339,7 +339,7 @@ export function App() {
     <div className="preset-banner small">
       <span>
         {preset.inGuide ? 'Case study loaded' : 'Example loaded'}: <strong>{preset.title}</strong> ({preset.product}).{' '}
-        {!preset.inGuide && <span className="badge">Not in the guide</span>}
+        {preset.edgeCase && <span className="badge badge-edge">Edge case</span>}
         {modified && ' You changed some inputs.'}
       </span>
       <button
