@@ -3,11 +3,13 @@ import { mergeRuns, selectedMeasurements } from '../framework/benchmark/criteria
 import { parseBenchmarkText, type ParsedRun } from '../framework/benchmark/parse';
 import { decideControl } from '../framework/control';
 import { getCase } from '../framework/data/cases';
+import { focusOption } from '../framework/data/families';
+import { FORMATS } from '../framework/data/formats';
 import { REF } from '../framework/data/guide';
 import type { CasePresetId } from '../framework/data/judgements';
 import { rank } from '../framework/score';
 import { defaultState, hashToState, presetState, stateToHash, withTopology, type AppState } from '../framework/state';
-import { firstStep, nextStep, prevStep, STEP_TITLE, stepStatuses, type StepId } from '../framework/steps';
+import { firstStep, nextStep, prevStep, STEPS, STEP_TITLE, stepStatuses, type StepId } from '../framework/steps';
 import { buildSummary } from '../framework/summary';
 import type { AnyFormatId, GuideRef } from '../framework/types';
 import { track } from '../lib/plausible';
@@ -17,8 +19,8 @@ import { ControlStage, OutcomeBox } from './ControlStage';
 import { CrossCutting, Footer, Method, Preconditions, PresetOutcome } from './Notes';
 import { PathSummary } from './PathSummary';
 import { MeasuredWeights, Priorities } from './Refinements';
-import { Results } from './Results';
-import { ShortList } from './ShortList';
+import { Results, verdict } from './Results';
+import { DsLogo } from './DsLogo';
 import { Stepper } from './Stepper';
 import { TopologyStage } from './TopologyStage';
 import { Welcome } from './Welcome';
@@ -70,26 +72,10 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-const KICKER: Record<StepId, string> = {
-  control: 'Step 1 of 4 · Stage 1 in the guide: control',
-  shape: 'Step 2 of 4 · Stage 2 in the guide: topology',
-  priorities: 'Step 3 of 4 · Stage 2 in the guide: refinements',
-  result: 'Step 4 of 4',
-};
-
-const INTRO: Record<Exclude<StepId, 'result'>, { text: string; refs: GuideRef[] }> = {
-  control: {
-    text: 'The framework asks first if the choice is yours. Your answers can settle the question before format comes up.',
-    refs: [REF.control, REF.whichBranch],
-  },
-  shape: {
-    text: 'The shape of the data selects a family of formats. Your priorities then rank the members.',
-    refs: [REF.topology],
-  },
-  priorities: {
-    text: 'Tell what the data are for. The short list changes with each answer.',
-    refs: [REF.refinements],
-  },
+const INTRO: Record<Exclude<StepId, 'result'>, { text: string; ref: GuideRef }> = {
+  control: { text: 'Your answers can settle the choice before format comes up.', ref: REF.control },
+  shape: { text: 'The shape picks a family of formats.', ref: REF.topology },
+  priorities: { text: 'What are the data for? Most products serve several uses.', ref: REF.intent },
 };
 
 export function App() {
@@ -287,6 +273,10 @@ export function App() {
   const header = (
     <header className="site-header">
       <div className="wrap header-inner">
+        <a className="ds-logo" href="https://developmentseed.org" aria-label="Development Seed">
+          <DsLogo height={26} />
+        </a>
+        <span className="header-sep" aria-hidden="true" />
         {view === 'welcome' ? (
           <span className="brand">CNG Formats Advisor</span>
         ) : (
@@ -297,11 +287,10 @@ export function App() {
         <div className="actions">
           {view !== 'welcome' && (
             <>
-              <button type="button" className="btn" onClick={onShare} aria-label="Copy share link">
-                <span className="long">Copy share link</span>
-                <span className="short" aria-hidden="true">Share</span>
+              <button type="button" className="pill" onClick={onShare} aria-label="Copy share link">
+                Share
               </button>
-              <button type="button" className="btn" onClick={onSummary} aria-label="Copy summary">
+              <button type="button" className="pill" onClick={onSummary} aria-label="Copy summary">
                 <span className="long">Copy summary</span>
                 <span className="short" aria-hidden="true">Summary</span>
               </button>
@@ -309,22 +298,18 @@ export function App() {
           )}
           <button
             type="button"
-            className="btn"
+            className="pill"
             onClick={() => setTheme(nextTheme[theme])}
             aria-label={`Theme: ${theme}. Select to change.`}
+            title={`Theme: ${theme === 'auto' ? 'system' : theme}`}
           >
-            <span className="long">Theme: {theme === 'auto' ? 'system' : theme}</span>
-            <span className="short" aria-hidden="true">
-              {theme === 'auto' ? '◐' : theme === 'light' ? '☀' : '☾'}
-            </span>
+            {theme === 'auto' ? '◐' : theme === 'light' ? '☀' : '☾'}
           </button>
         </div>
       </div>
-      <div className="wrap">
-        <span className="small muted status" role="status" aria-live="polite">
-          {status}
-        </span>
-      </div>
+      <span className={`toast${status ? ' on' : ''}`} role="status" aria-live="polite">
+        {status}
+      </span>
     </header>
   );
 
@@ -344,25 +329,29 @@ export function App() {
   const canNext = next !== null && statuses[next].available;
 
   const nextLabel: Record<StepId, string> = {
-    control:
-      control.kind === 'virtual' || control.kind === 'not-yet-possible' ? 'See the result' : 'Next: the shape of the data',
-    shape: 'Next: your priorities',
+    control: control.kind === 'virtual' || control.kind === 'not-yet-possible' ? 'See the result' : 'Next question',
+    shape: 'Next question',
     priorities: 'See my short list',
     result: '',
   };
   const blockedHint: Record<StepId, string> = {
-    control: 'Answer the questions above to continue.',
-    shape: 'Select a shape to continue. The follow-up question is optional.',
+    control: '',
+    shape: 'Pick a shape to continue.',
     priorities: '',
     result: '',
   };
 
   const presetBanner = preset && (
-    <div className="preset-banner small">
+    <div className="preset-banner">
       <span>
-        {preset.inGuide ? 'Case study loaded' : 'Example loaded'}: <strong>{preset.title}</strong> ({preset.product}).{' '}
-        {preset.edgeCase && <span className="badge badge-edge">Edge case</span>}
-        {modified && ' You changed some inputs.'}
+        {preset.inGuide ? 'Case study' : 'Example'}: <strong>{preset.name}</strong>
+        {preset.edgeCase && (
+          <>
+            {' '}
+            <span className="badge badge-edge">Edge case</span>
+          </>
+        )}
+        {modified && <span className="muted"> · you changed some answers</span>}
       </span>
       <button
         type="button"
@@ -372,127 +361,173 @@ export function App() {
           go('welcome');
         }}
       >
-        Other case study
+        Other example
       </button>
     </div>
   );
 
-  const stepHead = (
-    <>
-      <p className="kicker">{KICKER[step]}</p>
-      <h1 id="step-h" ref={heading} tabIndex={-1}>
-        {STEP_TITLE[step]}
-      </h1>
-    </>
-  );
-
   const nav = (
     <div className="step-nav">
-      <button type="button" className="btn" onClick={() => go(prev ?? 'welcome')}>
-        ‹ {prev ? 'Back' : 'Home'}
+      <button type="button" className="btn ghost" onClick={() => go(prev ?? 'welcome')}>
+        ← {prev ? 'Back' : 'Home'}
       </button>
       {step !== 'result' && (
         <span className="step-nav-next">
           {!canNext && blockedHint[step] && <span className="small muted">{blockedHint[step]}</span>}
           <button type="button" className="btn primary" disabled={!canNext} onClick={() => next && go(next)}>
-            {nextLabel[step]} ›
+            {nextLabel[step]}
           </button>
         </span>
       )}
     </div>
   );
 
+  const openMeasurements = () => {
+    const el = document.getElementById('measurements') as HTMLDetailsElement | null;
+    if (el) {
+      el.open = true;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   let body: ReactNode;
   if (step === 'result') {
+    const focus = focusOption(state.topology, state.familyFocus);
     body = (
       <main className="wrap result-page">
-        {presetBanner}
-        <div className="panel result-head">
-          {stepHead}
+        <header className="result-intro">
+          <p className="eyebrow">
+            Your short list
+            {preset && (
+              <>
+                {' · '}
+                {preset.name}
+                {preset.edgeCase && (
+                  <>
+                    {' '}
+                    <span className="badge badge-edge">Edge case</span>
+                  </>
+                )}
+                {' · '}
+                <button
+                  type="button"
+                  className="link-btn eyebrow-link"
+                  onClick={() => {
+                    setCasesOpen(true);
+                    go('welcome');
+                  }}
+                >
+                  other example
+                </button>
+              </>
+            )}
+          </p>
+          <h1 id="step-h" ref={heading} tabIndex={-1}>
+            {ranking ? verdict(ranking) : control.kind === 'virtual' ? 'Publish a virtual store' : 'No format decision yet'}
+          </h1>
           <PathSummary state={state} control={control} onGo={go} />
-        </div>
-        <div className={`result-grid${preset ? ' with-aside' : ''}`}>
-          <div className="col">
-            {ranking && state.topology ? (
-              <Results ranking={ranking} topology={state.topology} />
-            ) : (
-              <section className="panel">
-                <h2>{control.kind === 'virtual' ? 'Publish a virtual store' : 'No format decision yet'}</h2>
-                <OutcomeBox outcome={control} answers={state.answers} />
-              </section>
-            )}
-            {control.continuesToStage2 && (
-              <BenchmarkPanel
-                runs={runs}
-                errors={errors}
-                selection={selection}
-                tiers={state.tierPolicy.tiers}
-                preset={preset}
-                onFiles={onFiles}
-                onSelect={(f, id) => setSelection({ ...selection, [f]: id })}
-                onClear={() => {
-                  setRuns([]);
-                  setErrors([]);
-                  setSelection({});
-                }}
-                weights={<MeasuredWeights state={state} hasBenchmark={runs.length > 0} onChange={setState} />}
-              />
-            )}
-            <section aria-labelledby="further-h" className="further">
-              <h2 id="further-h">Go further</h2>
-              <CrossCutting />
-              <Method />
-            </section>
-          </div>
-          {preset && (
-            <div className="col">
-              <PresetOutcome preset={preset} modified={modified} />
+        </header>
+
+        {ranking && state.topology ? (
+          <Results ranking={ranking} topology={state.topology} focusChip={focus?.short} />
+        ) : (
+          <section className="plain-card">
+            <OutcomeBox outcome={control} answers={state.answers} />
+          </section>
+        )}
+
+        <div className="strip">
+          {control.continuesToStage2 && (
+            <button type="button" className="strip-card" onClick={openMeasurements}>
+              <b>{ranking?.close ? 'Close call? Measure them' : 'Measure your own data'}</b>
+              <span>Run cng-formats-benchmark, then upload the results here.</span>
+            </button>
+          )}
+          {preset && <PresetOutcome preset={preset} modified={modified} />}
+          {state.answers.existingUsers && control.kind !== 'incomplete' && (
+            <div className="strip-card">
+              <b>Your users have their own tools</b>
+              <span>Publish the new format alongside what they read today, and announce the change.</span>
             </div>
           )}
+          <a className="strip-card" href={REF.whatItIs.url} target="_blank" rel="noopener noreferrer">
+            <b>Read the guide ↗</b>
+            <span>Every rule here comes from the decision framework.</span>
+          </a>
         </div>
+
+        {control.continuesToStage2 && (
+          <details className="section" id="measurements">
+            <summary>Measurements</summary>
+            <BenchmarkPanel
+              runs={runs}
+              errors={errors}
+              selection={selection}
+              tiers={state.tierPolicy.tiers}
+              preset={preset}
+              onFiles={onFiles}
+              onSelect={(f, id) => setSelection({ ...selection, [f]: id })}
+              onClear={() => {
+                setRuns([]);
+                setErrors([]);
+                setSelection({});
+              }}
+              weights={<MeasuredWeights state={state} hasBenchmark={runs.length > 0} onChange={setState} />}
+            />
+          </details>
+        )}
+        <details className="section">
+          <summary>Go further: how the score works, and more</summary>
+          <CrossCutting />
+          <Method />
+        </details>
         {nav}
       </main>
     );
   } else {
     const intro = INTRO[step];
+    const index = STEPS.indexOf(step) + 1;
     body = (
       <main className="wrap step-page">
         {presetBanner}
-        <div className={`step-grid${ranking ? ' with-aside' : ''}`}>
-          <section className="panel step-main" aria-labelledby="step-h">
-            {stepHead}
-            <p className="small">
-              {intro.text}{' '}
-              {intro.refs.map((r, i) => (
-                <span key={r.url}>
+        <section className="step-main" aria-labelledby="step-h">
+          <p className="eyebrow">Question {index} of 3</p>
+          <h1 id="step-h" ref={heading} tabIndex={-1}>
+            {STEP_TITLE[step]}
+          </h1>
+          <p className="step-sub">
+            {intro.text} <Ref to={intro.ref}>Why</Ref>
+          </p>
+          {step === 'control' && (
+            <ControlStage
+              answers={state.answers}
+              outcome={control}
+              onChange={(answers) => setState((s) => ({ ...s, answers }))}
+            />
+          )}
+          {step === 'shape' && (
+            <TopologyStage
+              value={state.topology}
+              focus={state.familyFocus}
+              onChange={(topology) => setState((s) => withTopology(s, topology))}
+              onFocus={(familyFocus) => setState((s) => ({ ...s, familyFocus }))}
+            />
+          )}
+          {step === 'priorities' && <Priorities state={state} onChange={setState} />}
+          {ranking && step !== 'control' && (
+            <p className="so-far">
+              Short list so far:{' '}
+              {ranking.candidates.map((c, i) => (
+                <span key={c.format}>
                   {i > 0 && ' · '}
-                  <Ref to={r} />
+                  {i === 0 ? <b>{FORMATS[c.format].name}</b> : FORMATS[c.format].name}
                 </span>
               ))}
             </p>
-            {step === 'control' && (
-              <>
-                <Preconditions />
-                <ControlStage
-                  answers={state.answers}
-                  outcome={control}
-                  onChange={(answers) => setState({ ...state, answers })}
-                />
-              </>
-            )}
-            {step === 'shape' && (
-              <TopologyStage
-                value={state.topology}
-                focus={state.familyFocus}
-                onChange={(topology) => setState((s) => withTopology(s, topology))}
-                onFocus={(familyFocus) => setState((s) => ({ ...s, familyFocus }))}
-              />
-            )}
-            {step === 'priorities' && <Priorities state={state} onChange={setState} />}
-            {nav}
-          </section>
-          {ranking && <ShortList ranking={ranking} onOpen={() => statuses.result.available && go('result')} />}
-        </div>
+          )}
+          {nav}
+          {step === 'control' && <Preconditions />}
+        </section>
       </main>
     );
   }

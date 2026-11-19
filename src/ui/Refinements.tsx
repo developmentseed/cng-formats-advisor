@@ -10,6 +10,17 @@ import { Ref, Segmented, WeightPicker } from './common';
 
 const MiB = 1024 * 1024;
 
+/** Words for the intent weights 0 to 3. The score breakdown shows the numbers. */
+const WEIGHT_WORDS = ['No', 'Some', 'Yes', 'Main'];
+
+const INTENT_HINT: Record<(typeof INTENTS)[number], string> = {
+  archive: 'Keep the data, and let people download whole files.',
+  processing: 'Analysis: on the fly, or in batches.',
+  visualization: 'Maps and previews in a browser.',
+  distribution: 'Serve parts of the data to many users.',
+  fusion: 'Combine with other products or missions.',
+};
+
 /** Step 3: the intent mix first, the other refinements in a collapsed block. */
 export function Priorities({ state, onChange }: { state: AppState; onChange: Dispatch<SetStateAction<AppState>> }) {
   const custom = state.customTiers;
@@ -17,26 +28,23 @@ export function Priorities({ state, onChange }: { state: AppState; onChange: Dis
 
   return (
     <div>
-      <div className="field">
-        <span className="label">What are the data for? Give each intent a weight from 0 (not an intent) to 3.</span>
-        <span className="small muted">
-          Most products serve several intents. The intent mix decides the ranking. <Ref to={REF.intent} />
-        </span>
+      <div className="intent-cards">
         {INTENTS.map((i) => (
-          <div className="field-row" key={i}>
-            <span>{INTENT_LABEL[i]}</span>
+          <div className={`intent-card${state.intentWeights[i] > 0 ? ' on' : ''}`} key={i}>
+            <span className="intent-name">{INTENT_LABEL[i]}</span>
+            <span className="intent-hint">{INTENT_HINT[i]}</span>
             <WeightPicker
-              label={`Weight of ${INTENT_LABEL[i]}`}
+              label={`How much does ${INTENT_LABEL[i].toLowerCase()} matter?`}
               value={state.intentWeights[i]}
+              words={WEIGHT_WORDS}
               onChange={(v) => onChange((s) => ({ ...s, intentWeights: { ...s.intentWeights, [i]: v } }))}
             />
           </div>
         ))}
-        {state.intentWeights.fusion > 0 && <span className="small muted">{INTENT_NOTES.fusion}</span>}
       </div>
 
       <details className="more">
-        <summary>More refinements: processing, maturity, encoding, object size</summary>
+        <summary>More options: processing, maturity, encoding, object size</summary>
       <div className="field">
         <div className="field-row">
           <span className="label" id="pm-l">

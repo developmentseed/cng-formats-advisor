@@ -1,11 +1,10 @@
 import { FAMILIES, focusOption } from '../framework/data/families';
-import { FORMATS } from '../framework/data/formats';
 import { INTENTS, INTENT_LABEL } from '../framework/data/intents';
 import type { AppState } from '../framework/state';
 import { OUTCOME_SHORT, type StepId } from '../framework/steps';
 import type { ControlOutcome } from '../framework/types';
 
-/** "Your path": a recap of the answers on the result step, with a link back to each step. */
+/** Your answers on one line. Each part opens its step. */
 export function PathSummary({
   state,
   control,
@@ -15,40 +14,31 @@ export function PathSummary({
   control: ControlOutcome;
   onGo: (s: StepId) => void;
 }) {
-  const intents = INTENTS.filter((i) => state.intentWeights[i] > 0)
-    .sort((a, b) => state.intentWeights[b] - state.intentWeights[a])
-    .map((i) => `${INTENT_LABEL[i]} (${state.intentWeights[i]})`);
-  const rows: { step: StepId; label: string; value: string }[] = [
-    { step: 'control', label: 'Control', value: OUTCOME_SHORT[control.kind] },
-  ];
-  if (control.continuesToStage2) {
-    const focus = focusOption(state.topology, state.familyFocus);
-    rows.push({
-      step: 'shape',
-      label: 'Shape',
-      value: state.topology
-        ? `${FAMILIES[state.topology].label}${focus ? ` · ${focus.label.split(':')[0]} (favours ${FORMATS[focus.favours].name})` : ''}`
-        : 'not set',
-    });
-    rows.push({
-      step: 'priorities',
-      label: 'Priorities',
-      value: `${intents.join(', ') || 'no intent'} · maturity L${state.minMaturity}+ · encoding ${state.encodingImportance}`,
-    });
+  const top = INTENTS.filter((i) => state.intentWeights[i] > 0).sort((a, b) => state.intentWeights[b] - state.intentWeights[a]);
+  const focus = focusOption(state.topology, state.familyFocus);
+  const parts: { step: StepId; text: string }[] = [{ step: 'control', text: OUTCOME_SHORT[control.kind] }];
+  if (control.continuesToStage2 && state.topology) {
+    parts.push({ step: 'shape', text: FAMILIES[state.topology].label.split(',')[0]! });
+    if (focus) parts.push({ step: 'shape', text: focus.chip.split(':')[0]!.toLowerCase() });
+    if (top[0]) {
+      const equal = top.length === INTENTS.length && new Set(top.map((i) => state.intentWeights[i])).size === 1;
+      parts.push({ step: 'priorities', text: equal ? 'all uses equal' : `${INTENT_LABEL[top[0]].toLowerCase()} first` });
+    }
   }
   return (
-    <dl className="path">
-      {rows.map((r) => (
-        <div key={r.step}>
-          <dt>{r.label}</dt>
-          <dd>
-            {r.value}{' '}
-            <button type="button" className="link-btn small" onClick={() => onGo(r.step)}>
-              Change
-            </button>
-          </dd>
-        </div>
+    <p className="path-line">
+      {parts.map((p, i) => (
+        <span key={`${p.step}-${i}`}>
+          {i > 0 && <span aria-hidden="true"> · </span>}
+          <button type="button" className="path-part" onClick={() => onGo(p.step)} title="Change this answer">
+            {p.text}
+          </button>
+        </span>
       ))}
-    </dl>
+      <span aria-hidden="true"> · </span>
+      <button type="button" className="link-btn" onClick={() => onGo('control')}>
+        change answers
+      </button>
+    </p>
   );
 }

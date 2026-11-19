@@ -19,8 +19,8 @@ import { Ref, WarningList } from './common';
 
 export function Preconditions() {
   return (
-    <details className="more">
-      <summary>Before you start: is your format cloud-optimized at all? (P1 and P2)</summary>
+    <details className="more quiet">
+      <summary>Is your format cloud-optimized at all? (P1 and P2)</summary>
       <p className="small">
         <strong>P1. The format must support partial and parallel reads over HTTP.</strong> A reader loads the metadata
         in a single read, then fetches only the chunks or tiles that it needs with HTTP range requests.
@@ -37,41 +37,43 @@ export function Preconditions() {
   );
 }
 
+/** A strip card: where the case lands in the guide, with its notes behind a toggle. */
 export function PresetOutcome({ preset, modified }: { preset: CasePreset; modified: boolean }) {
   return (
-    <section className="panel" aria-labelledby="preset-out-h">
-      <h2 id="preset-out-h">
-        {preset.inGuide ? 'Where it lands in the guide' : 'About this preset'}
-        {preset.edgeCase && <span className="badge badge-edge">Edge case</span>}
-      </h2>
-      <p className="small muted">
-        {preset.title} · {preset.product}
-        {preset.sourceFormat && ` · source: ${preset.sourceFormat}`}
-      </p>
-      <p>
-        <strong>{preset.outcome}</strong>
-      </p>
-      {preset.edgeCase && (
-        <div className="callout" style={{ marginBottom: 8 }}>
-          <strong>Edge case.</strong> {preset.edgeCase}
-        </div>
-      )}
-      {modified && preset.inGuide && (
-        <p className="small muted">You changed some inputs, so the ranking can differ from the guide.</p>
-      )}
-      <WarningList items={preset.cautions.map((t) => ({ text: t }))} />
-      {preset.ref && (
-        <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>
-          <Ref to={preset.ref} />
-        </p>
-      )}
-    </section>
+    <div className="strip-card preset-card">
+      <b>{preset.inGuide ? 'In the guide' : 'About this example'}</b>
+      <span>
+        Lands on: <strong>{preset.landsOn}</strong>
+        {preset.edgeCase && (
+          <>
+            {' '}
+            <span className="badge badge-edge">Edge case</span>
+          </>
+        )}
+      </span>
+      {modified && preset.inGuide && <span className="muted">You changed some answers: the ranking can differ.</span>}
+      <details>
+        <summary>Notes from the guide</summary>
+        <p>{preset.outcome}</p>
+        {preset.edgeCase && (
+          <p>
+            <strong>Edge case.</strong> {preset.edgeCase}
+          </p>
+        )}
+        <WarningList items={preset.cautions.map((t) => ({ text: t }))} />
+        {preset.ref && (
+          <p style={{ marginBottom: 0 }}>
+            <Ref to={preset.ref} />
+          </p>
+        )}
+      </details>
+    </div>
   );
 }
 
 export function CrossCutting() {
   return (
-    <details className="panel">
+    <details className="sub-section">
       <summary>Cross-cutting considerations</summary>
       <p className="small">These do not change which format you choose. They change how you implement it.</p>
       <ul className="small">
@@ -112,7 +114,7 @@ function CitedRow({ name, c }: { name: string; c: Cited<unknown> }) {
 export function Method() {
   const formats = Object.keys(INTENT_FIT) as FormatId[];
   return (
-    <details className="panel" id="method">
+    <details className="sub-section" id="method">
       <summary>How the score works, and the values to review</summary>
       <p className="small">
         The guide gives rules in words. The score needs numbers. The values below are our encoding of the guide text.

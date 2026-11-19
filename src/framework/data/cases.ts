@@ -46,6 +46,12 @@ export interface CasePreset {
   measurements: PublishedArm[];
   /** "Where it lands", as the guide writes it. */
   outcome: string;
+  /** Display name for the case tile and the banner. */
+  name: string;
+  /** A few words for the case tile. */
+  short: string;
+  /** The format tag of the case tile: where the case lands, in format names only. */
+  tag: string;
   /** Short form: the "Lands on" column of the guide summary table, or our text when not in the guide. */
   landsOn: string;
   /** Cautions of the guide for this case. */
@@ -123,6 +129,9 @@ export const CASES: CasePreset[] = [
         notes: ['Source .zip: 2023.7 MiB. The COG is about 30 % larger, mostly because of the overviews.'],
       },
     ],
+    name: 'Sentinel-2 L2A',
+    short: 'Optical scenes',
+    tag: 'COG',
     landsOn: 'COG per scene',
     outcome: 'COG per scene for distribution and visualization.',
     cautions: [
@@ -183,6 +192,9 @@ export const CASES: CasePreset[] = [
         notes: ['Source .zip: 496 MiB. The COG is about 47 % larger.'],
       },
     ],
+    name: 'Sentinel-1 RTC',
+    short: 'Radar time cube',
+    tag: 'COG + GeoZarr',
     landsOn: 'COG to serve, GeoZarr to analyse',
     outcome:
       'COG for the serving path, because it keeps both the tier and the display speed. GeoZarr for the analysis path, once the cube is built and measured.',
@@ -224,6 +236,9 @@ export const CASES: CasePreset[] = [
         totalSize: { value: 3621.4, unit: 'MiB' },
       },
     ],
+    name: 'SWOT Pixel Cloud',
+    short: 'Point cloud',
+    tag: 'COPC',
     landsOn: 'COPC',
     outcome:
       'COPC. The cloud-optimized value is partial access and level of detail at size parity, not a size saving. GeoParquet is the alternative where columnar analytics dominate.',
@@ -276,6 +291,9 @@ export const CASES: CasePreset[] = [
         ],
       },
     ],
+    name: 'SWOT Lake Single Pass',
+    short: 'Lakes: vector and table',
+    tag: 'GeoParquet',
     landsOn: 'GeoParquet, aggregated',
     outcome:
       'GeoParquet, with pass-level aggregation. It wins on size, on download, and on fusion. FlatGeobuf is the measured alternative where whole-row spatial subsetting dominates.',
@@ -303,6 +321,9 @@ export const CASES: CasePreset[] = [
     },
     tierPolicy: 'none',
     measurements: [],
+    name: 'Frozen archive',
+    short: 'Archive that you cannot rewrite',
+    tag: 'Virtual Zarr',
     landsOn: 'Virtual Zarr',
     outcome: 'Virtual Zarr. Range access with no reprocessing.',
     cautions: [
@@ -328,6 +349,9 @@ export const CASES: CasePreset[] = [
     },
     tierPolicy: 'none',
     measurements: [],
+    name: 'DUACS sea level',
+    short: 'Sea level: CF netCDF cube',
+    tag: 'GeoZarr',
     landsOn: 'GeoZarr, from the guide text (not measured)',
     outcome:
       'Not a case of the guide, and not measured. The guide text points to GeoZarr for this use: "GeoZarr for analysis across the cube" (topology table), and an L2 candidate "can still be the right answer" for multidimensional cubes.',
@@ -347,6 +371,9 @@ export const CASES: CasePreset[] = [
     answers: { ...BLANK, existingData: false, mandate: false },
     tierPolicy: 'none',
     measurements: [],
+    name: 'New product',
+    short: 'No data yet',
+    tag: '',
     landsOn: 'your answers',
     outcome: 'Not in the guide. Answer the questions for your product.',
     cautions: [],

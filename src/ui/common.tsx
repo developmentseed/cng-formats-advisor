@@ -52,12 +52,27 @@ export function YesNo({ value, onChange, label }: { value: Answer; onChange: (v:
   );
 }
 
-export function WeightPicker({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+export function WeightPicker({
+  value,
+  onChange,
+  label,
+  words,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+  /** Words for 0 to 3, instead of the numbers. */
+  words?: string[];
+}) {
   return (
     <Segmented<number>
       label={label}
       value={value}
-      options={[0, 1, 2, 3].map((n) => ({ value: n, label: String(n), title: n === 0 ? 'Not an intent' : `Weight ${n}` }))}
+      options={[0, 1, 2, 3].map((n) => ({
+        value: n,
+        label: words?.[n] ?? String(n),
+        title: words ? `Weight ${n}` : n === 0 ? 'Not used' : `Weight ${n}`,
+      }))}
       onChange={onChange}
     />
   );
