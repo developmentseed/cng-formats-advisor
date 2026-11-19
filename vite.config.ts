@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
-import { plausiblePlugin } from './plausible-html';
+import { plausiblePlugin } from './plausible-html.ts';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
