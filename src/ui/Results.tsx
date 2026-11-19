@@ -50,7 +50,8 @@ function ScoreBar({ c }: { c: RankedCandidate }) {
         {segs.map((t) => {
           const left = acc + t.points / 2;
           acc += t.points;
-          const text = `${GROUP_LABEL[groupOf(t)]}: ${t.label}. Weight ${t.weight}, value ${t.value?.toFixed(2)}. ${t.points.toFixed(1)} points.`;
+          const name = groupOf(t) === 'intent' ? `Intent fit, ${t.label.toLowerCase()}` : t.label;
+          const text = `${name}. Weight ${t.weight}, value ${t.value?.toFixed(2)}. ${t.points.toFixed(1)} points.`;
           return (
             <div
               key={t.kind}

@@ -201,7 +201,7 @@ export function App() {
             >
               Theme: {theme === 'auto' ? 'system' : theme}
             </button>
-            <span className="small muted" role="status" aria-live="polite" style={{ alignSelf: 'center' }}>
+            <span className="small muted status" role="status" aria-live="polite">
               {status}
             </span>
           </div>

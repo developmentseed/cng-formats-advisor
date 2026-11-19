@@ -220,7 +220,7 @@ export function BenchmarkPanel({
             ))}
 
           <div className="table-wrap" style={{ marginTop: 8 }}>
-            <table>
+            <table className="runs-table">
               <thead>
                 <tr>
                   <th>Arm</th>
