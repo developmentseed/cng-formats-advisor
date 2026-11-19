@@ -69,7 +69,7 @@ export function stepStatuses(s: AppState, control: ControlOutcome, ranking: Rank
       summary:
         shapeDone && s.topology
           ? FAMILIES[s.topology].label.split(',')[0]! +
-            (focusOption(s.topology, s.familyFocus) ? ` · ${FORMATS[focusOption(s.topology, s.familyFocus)!.favours].name}` : '')
+            (focusOption(s.topology, s.familyFocus) ? ` · ${focusOption(s.topology, s.familyFocus)!.short}` : '')
           : '',
     },
     priorities: {

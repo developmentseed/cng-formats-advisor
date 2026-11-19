@@ -11,6 +11,8 @@ export interface FocusOption {
   id: string;
   label: string;
   favours: FormatId;
+  /** A few words for the step bar. They do not name a format. */
+  short: string;
   /** The words of the "Where each member wins" column. */
   guideText: string;
 }
@@ -39,9 +41,9 @@ export const FAMILIES: Record<Topology, Family> = {
     members: ['cog', 'geozarr', 'pmtiles'],
     focusQuestion: 'Which use fits the product best?',
     focus: [
-      { id: 'scene', label: 'Distribution and visualization, scene by scene', favours: 'cog', guideText: 'COG for distribution and visualization' },
-      { id: 'cube', label: 'The product is really a cube: many dates or bands read together', favours: 'geozarr', guideText: 'Zarr if the product is really a cube' },
-      { id: 'tiles', label: 'Pre-rendered tile delivery to web maps', favours: 'pmtiles', guideText: 'PMTiles for pre-rendered tile delivery' },
+      { id: 'scene', label: 'Distribution and visualization, scene by scene', favours: 'cog', short: 'scene by scene', guideText: 'COG for distribution and visualization' },
+      { id: 'cube', label: 'The product is really a cube: many dates or bands read together', favours: 'geozarr', short: 'a real cube', guideText: 'Zarr if the product is really a cube' },
+      { id: 'tiles', label: 'Pre-rendered tile delivery to web maps', favours: 'pmtiles', short: 'pre-rendered tiles', guideText: 'PMTiles for pre-rendered tile delivery' },
     ],
     wins: {
       cog: 'COG for distribution and visualization',
@@ -57,9 +59,9 @@ export const FAMILIES: Record<Topology, Family> = {
     members: ['geozarr', 'cog', 'co-hdf5'],
     focusQuestion: 'How do readers use the cube?',
     focus: [
-      { id: 'across', label: 'Analysis across the cube: time series, an area over many dates', favours: 'geozarr', guideText: 'GeoZarr for analysis across the cube' },
-      { id: 'slices', label: 'Slices are read alone: one time step at a time', favours: 'cog', guideText: 'COG per time step if slices are read alone' },
-      { id: 'archival', label: 'An archival format is mandated, or existing tooling must keep working', favours: 'co-hdf5', guideText: 'cloud-optimized HDF/netCDF where an archival format is mandated or existing tooling must keep working' },
+      { id: 'across', label: 'Analysis across the cube: time series, an area over many dates', favours: 'geozarr', short: 'across the cube', guideText: 'GeoZarr for analysis across the cube' },
+      { id: 'slices', label: 'Slices are read alone: one time step at a time', favours: 'cog', short: 'slices alone', guideText: 'COG per time step if slices are read alone' },
+      { id: 'archival', label: 'An archival format is mandated, or existing tooling must keep working', favours: 'co-hdf5', short: 'archival format', guideText: 'cloud-optimized HDF/netCDF where an archival format is mandated or existing tooling must keep working' },
     ],
     wins: {
       geozarr: 'GeoZarr for analysis across the cube',
@@ -75,8 +77,8 @@ export const FAMILIES: Record<Topology, Family> = {
     members: ['copc', 'geoparquet'],
     focusQuestion: 'What do readers mostly do with the points?',
     focus: [
-      { id: 'subset', label: 'Spatial subsets and level of detail', favours: 'copc', guideText: 'COPC for spatial subsetting and level of detail' },
-      { id: 'columnar', label: 'Columnar analytics over the attributes', favours: 'geoparquet', guideText: 'GeoParquet if columnar analytics dominate' },
+      { id: 'subset', label: 'Spatial subsets and level of detail', favours: 'copc', short: 'spatial subsets', guideText: 'COPC for spatial subsetting and level of detail' },
+      { id: 'columnar', label: 'Columnar analytics over the attributes', favours: 'geoparquet', short: 'columnar analytics', guideText: 'GeoParquet if columnar analytics dominate' },
     ],
     wins: {
       copc: 'COPC for spatial subsetting and level of detail',
@@ -90,9 +92,9 @@ export const FAMILIES: Record<Topology, Family> = {
     members: ['geoparquet', 'flatgeobuf', 'pmtiles'],
     focusQuestion: 'What is the main use of the features?',
     focus: [
-      { id: 'joins', label: 'Joins and analytics', favours: 'geoparquet', guideText: 'GeoParquet for joins and analytics' },
-      { id: 'streaming', label: 'Streaming download: features arrive and render progressively', favours: 'flatgeobuf', guideText: 'FlatGeobuf for streaming download' },
-      { id: 'tiles', label: 'Tiled web delivery', favours: 'pmtiles', guideText: 'PMTiles for tiled web delivery' },
+      { id: 'joins', label: 'Joins and analytics', favours: 'geoparquet', short: 'joins and analytics', guideText: 'GeoParquet for joins and analytics' },
+      { id: 'streaming', label: 'Streaming download: features arrive and render progressively', favours: 'flatgeobuf', short: 'streaming', guideText: 'FlatGeobuf for streaming download' },
+      { id: 'tiles', label: 'Tiled web delivery', favours: 'pmtiles', short: 'tiled web delivery', guideText: 'PMTiles for tiled web delivery' },
     ],
     wins: {
       geoparquet: 'GeoParquet for joins and analytics',
